@@ -1,0 +1,9 @@
+pylint
+flake8
+black
+pytest-aiohttp
+pytest
+#rope
+pytest-asyncio
+pytest-env
+#aiohttp-devtools
