@@ -5,18 +5,19 @@ from pathlib import Path
 from typing import Any, Type
 
 
-class Var:
+class Var:  # pylint: disable=too-few-public-methods
     """Variable settings."""
 
     @staticmethod
     def from_value(val: Any):  # type: ignore
+        """Ensure the return is an instance of Var."""
         return val if isinstance(val, Var) else Var(type(val))
 
     def __init__(
-        self, type: Type, hidden: bool = False, required: bool = False
+        self, var_type: Type, hidden: bool = False, required: bool = False
     ) -> None:
         """Init class."""
-        self.v_type = type
+        self.v_type = var_type
         self.hide = hidden
         self.required = required
 
@@ -32,7 +33,8 @@ class SettingsBase:
     convert environment variables to match the type of the value here.
     """
 
-    _vars = {}
+    _vars: dict[str, Var] = {}
+    _env_prefix = ""
 
     def load(self, environment_prefix: str = "") -> None:
         """Initialize."""

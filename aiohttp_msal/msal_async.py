@@ -104,6 +104,7 @@ class AsyncMSAL:
 
     @property
     def token_cache(self) -> SerializableTokenCache:
+        """Get the token_cache."""
         if not self._token_cache:
             self._token_cache = SerializableTokenCache()
             # _load_token_cache
@@ -143,7 +144,8 @@ class AsyncMSAL:
             redirect_uri=redirect_uri,
             # max_age=1209600,
             # max allowed 86400 - 1 day
-        )  # https://msal-python.readthedocs.io/en/latest/#msal.ClientApplication.initiate_auth_code_flow
+        )
+        # https://msal-python.readthedocs.io/en/latest/#msal.ClientApplication.initiate_auth_code_flow
         return str(res["auth_uri"])
 
     @async_wrap

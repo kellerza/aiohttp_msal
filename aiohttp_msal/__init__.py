@@ -14,8 +14,7 @@ from .settings import ENV
 
 _LOGGER = logging.getLogger(__name__)
 
-COOKIE_NAME = "AIOHTTP_SESSION"
-VERSION = 0.1
+VERSION = 0.3
 
 
 def msal_session(*args: Callable[[AsyncMSAL], bool]) -> Callable:
@@ -47,6 +46,10 @@ def authenticated(ses: AsyncMSAL) -> bool:
 
 
 async def app_init_redis_session(app: web.Application) -> None:
+    """OPTIONAL: Initialize aiohttp_session with Redis storage.
+
+    You can initialize your own aiohttp_session & storage provider."""
+    # pylint: disable=import-outside-toplevel
     import aioredis
     from aiohttp_session import redis_storage
 
@@ -72,11 +75,13 @@ async def app_init_redis_session(app: web.Application) -> None:
         httponly=True,
         secure=True,
         domain=ENV.DOMAIN,
+        cookie_name=ENV.COOKIE_NAME,
     )
     _setup(app, storage)
 
 
 async def check_proxy() -> None:
+    """Test if we have Internet connectivity through proxies etc."""
     try:
         async with ClientSession(trust_env=True) as cses:
             async with cses.get("http://httpbin.org/get") as resp:

@@ -12,6 +12,7 @@ class MSALSettings(SettingsBase):
     SP_AUTHORITY = Var(str, required=True)
 
     REDIS = "redis://redis1:6379"
+    COOKIE_NAME = "AIOHTTP_SESSION"
     DOMAIN = "mydomain.com"
 
     database: Any = None

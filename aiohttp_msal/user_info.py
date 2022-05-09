@@ -12,14 +12,14 @@ def retry(func: Callable) -> Callable:
     @wraps(func)
     async def _retry(*args: Any, **kwargs: Any) -> Any:
         """Retry the request."""
-        retry = [2, 4, 8]
+        retries = [2, 4, 8]
         while True:
             try:
                 res = await func(*args, **kwargs)
                 return res
-            except Exception as err:  # pylint: ignore:broad-except
-                if retry:
-                    await asyncio.sleep(retry.pop())
+            except Exception as err:  # pylint: disable=broad-except
+                if retries:
+                    await asyncio.sleep(retries.pop())
                 else:
                     raise err
 

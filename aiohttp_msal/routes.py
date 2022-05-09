@@ -1,6 +1,6 @@
 """The user blueprint."""
 import time
-from typing import Any
+from typing import Any, Sequence
 from urllib.parse import urljoin
 
 from aiohttp import web
@@ -8,7 +8,7 @@ from aiohttp_session import get_session, new_session
 
 from aiohttp_msal.user_info import get_manager_info, get_user_info
 
-from . import _LOGGER, COOKIE_NAME, ENV, authenticated, msal_session
+from . import _LOGGER, ENV, authenticated, msal_session
 from .msal_async import FLOW_CACHE, AsyncMSAL
 
 ROUTES = web.RouteTableDef()
@@ -63,13 +63,14 @@ async def user_authorized(request: web.Request) -> web.Response:
     if not all(auth_response.get(k) for k in ["code", "session_state", "state"]):
         # ic(auth_response)
         msg.append(
-            f"<b>Expecting code,state,session_state in URL query params.</b> auth_response: {auth_response}"
+            "<b>Expecting code,state,session_state in URL query params.</b>"
+            f"auth_response: {auth_response}"
         )
 
-    if not request.cookies.get(COOKIE_NAME):
+    if not request.cookies.get(ENV.COOKIE_NAME):
         # ic(request.cookies.keys())
         cookies = dict(request.cookies.items())
-        msg.append(f"<b>Expecting '{COOKIE_NAME}' in cookies</b>")
+        msg.append(f"<b>Expecting '{ENV.COOKIE_NAME}' in cookies</b>")
         _LOGGER.fatal("Cookie should be set with Samesite:None")
         msg.append(html_table(cookies))
         try:
@@ -108,12 +109,12 @@ async def user_authorized(request: web.Request) -> web.Response:
 
     if msg:
         resp = web.Response(
-            body=html_wrap("</li><li>".join(msg)),
+            body=html_wrap(msg),
             content_type="text/html",
         )
         if response_cookie:
             resp.set_cookie(
-                COOKIE_NAME,
+                ENV.COOKIE_NAME,
                 "",
                 path="/",
                 httponly=True,
@@ -134,7 +135,7 @@ async def user_debug(request: web.Request) -> web.Response:
     session = await get_session(request)
     session["debug"] = True
     debug = {
-        f"cookies[{COOKIE_NAME}]": request.cookies.get(COOKIE_NAME),
+        f"cookies[{ENV.COOKIE_NAME}]": request.cookies.get(ENV.COOKIE_NAME),
         "cookies.keys()": list(request.cookies.keys()),
         # "cookies": dict(request.cookies),
         "session": str(session),
@@ -233,24 +234,22 @@ def html_table(items: dict) -> str:
     return res
 
 
-def html_wrap(html: str) -> str:
+def html_wrap(msgs: Sequence[str]) -> str:
     """Return proper HTML when login fails."""
+    html = "</li><li>".join(msgs)
     return f"""
-    <p>Login failed. Retry at <a href='/user/login'>/user/login</a></p>
+    <h2>Login failed</h2>
 
-    Debug info:<ul><li>{html}
+    <p>Retry at <a href='/user/login'>/user/login</a></p>
 
-    <h2>What now?</h2>
-
-    <p>The {ENV.DOMAIN} domain gets many cookies set by all our corporate tools.
-    This causes issues with some browsers and if you get an error during login please
-    clear these</p>
-
-    <p>If you get <b>Expecting '{COOKIE_NAME}' in cookies</b> clear the cookies for
-    <b>.{ENV.DOMAIN}<b> by navigating to the correct address for your browser:
+    <p>Try clearing the cookies for <b>.{ENV.DOMAIN}<b> by navigating to the correct
+    address for your browser:
     <ul>
     <li>chrome://settings/siteData?searchSubpage={ENV.DOMAIN}</li>
     <li>brave://settings/siteData?searchSubpage={ENV.DOMAIN}</li>
-    <li>edge://settings/siteData</li> (you will have to search for {ENV.DOMAIN} cookies)
+    <li>edge://settings/siteData (you will have to search for {ENV.DOMAIN} cookies)</li>
     </ul></p>
+
+    <h4>Debug info</h4>
+    <ul><li>{html}</li></ul>
     """
