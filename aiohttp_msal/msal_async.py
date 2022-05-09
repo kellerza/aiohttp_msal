@@ -95,7 +95,7 @@ class AsyncMSAL:
 
     _token_cache: SerializableTokenCache = None
     _app: ConfidentialClientApplication = None
-    _clientsession: ClientSession = None
+    _clientsession: ClientSession = None  # type: ignore
 
     def __init__(self, session: Session):
         """Init the class."""
