@@ -1,4 +1,4 @@
-"""aiohttp_msal"""
+"""aiohttp_msal."""
 import logging
 from functools import wraps
 from inspect import getfullargspec, iscoroutinefunction
@@ -48,7 +48,8 @@ def authenticated(ses: AsyncMSAL) -> bool:
 async def app_init_redis_session(app: web.Application) -> None:
     """OPTIONAL: Initialize aiohttp_session with Redis storage.
 
-    You can initialize your own aiohttp_session & storage provider."""
+    You can initialize your own aiohttp_session & storage provider.
+    """
     # pylint: disable=import-outside-toplevel
     import aioredis
     from aiohttp_session import redis_storage

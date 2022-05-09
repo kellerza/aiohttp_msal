@@ -98,6 +98,7 @@ class AsyncMSAL:
     _clientsession: ClientSession = None
 
     def __init__(self, session: Session):
+        """Init the class."""
         self.session = session
         if not isinstance(session, Session):
             raise Exception(f"session required {session}")

@@ -23,8 +23,7 @@ class Var:  # pylint: disable=too-few-public-methods
 
 
 class SettingsBase:
-    """
-    Retrieve Settings from environment variables.
+    """Retrieve Settings from environment variables.
 
     Settings the appropriate environment variable, eg. to override FOOBAR,
     `export APP_FOOBAR="whatever"`.

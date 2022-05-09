@@ -5,7 +5,7 @@ from .settings_base import SettingsBase, Var
 
 
 class MSALSettings(SettingsBase):
-    """Settings"""
+    """Settings."""
 
     SP_APP_ID = Var(str, required=True)
     SP_APP_PW = Var(str, required=True)

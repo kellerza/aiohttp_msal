@@ -1,6 +1,6 @@
 """The user blueprint."""
 import time
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 from urllib.parse import urljoin
 
 from aiohttp import web
@@ -73,10 +73,6 @@ async def user_authorized(request: web.Request) -> web.Response:
         msg.append(f"<b>Expecting '{ENV.COOKIE_NAME}' in cookies</b>")
         _LOGGER.fatal("Cookie should be set with Samesite:None")
         msg.append(html_table(cookies))
-        try:
-            response_cookie = int(request.cookies.get("RFR")) + 1
-        except TypeError:
-            response_cookie = 1
 
     elif not session.get(FLOW_CACHE):
         # ic(session)
@@ -199,7 +195,7 @@ async def user_logout(request: web.Request, ses: AsyncMSAL) -> web.Response:
 
 @ROUTES.get("/user/photo")
 @msal_session(authenticated)
-async def user_photo(request: web.Request, ses: AsyncMSAL) -> web.Response:
+async def user_photo(request: web.Request, ses: AsyncMSAL) -> web.StreamResponse:
     """Photo."""
     async with ses.get("https://graph.microsoft.com/v1.0/me/photo/$value") as res:
         response = web.StreamResponse(status=res.status)
@@ -225,7 +221,7 @@ async def user_photo(request: web.Request, ses: AsyncMSAL) -> web.Response:
         return response
 
 
-def html_table(items: dict) -> str:
+def html_table(items: Mapping[Any, Any]) -> str:
     """Return a table HTML."""
     res = "<table style='width:80%;border:1px solid black;'>"
     for key, val in items.items():
