@@ -23,7 +23,8 @@ SESSION_REDIRECT = "redirect"
 def get_route(request: web.Request, url: str) -> str:
     """Retrieve server route from request.
 
-    localhost and production on http:// with nginx proxy that adds TLS/SSL."""
+    localhost and production on http:// with nginx proxy that adds TLS/SSL.
+    """
     url = str(request.url.origin() / url)
     if "localhost" not in url:
         url = url.replace("p:", "ps:", 1)

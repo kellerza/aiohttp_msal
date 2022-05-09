@@ -3,6 +3,7 @@ flake8
 black
 pytest-aiohttp
 pytest
+pytest-cov
 #rope
 pytest-asyncio
 pytest-env

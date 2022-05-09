@@ -51,8 +51,7 @@ USER_EMAIL = "mail"
 
 
 class AsyncMSAL:
-    """
-    AsycMSAL class.
+    """AsycMSAL class.
 
     AsyncIO based OAuth using the Microsoft Authentication Library (MSAL) for Python.
     Blocking MSAL functions are executed in the executor thread.
