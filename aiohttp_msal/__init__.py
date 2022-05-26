@@ -14,7 +14,7 @@ from .settings import ENV
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = 0.3
+VERSION = 0.4
 
 
 def msal_session(*args: Callable[[AsyncMSAL], bool]) -> Callable:
@@ -45,7 +45,9 @@ def authenticated(ses: AsyncMSAL) -> bool:
     return bool(ses.mail)
 
 
-async def app_init_redis_session(app: web.Application) -> None:
+async def app_init_redis_session(
+    app: web.Application, max_age: int = 3600 * 24 * 90
+) -> None:
     """OPTIONAL: Initialize aiohttp_session with Redis storage.
 
     You can initialize your own aiohttp_session & storage provider.
@@ -70,7 +72,7 @@ async def app_init_redis_session(app: web.Application) -> None:
 
     storage = redis_storage.RedisStorage(
         ENV.database,
-        max_age=3600 * 24 * 120,  # ~4 months
+        max_age=max_age,
         path="/",
         samesite="None",
         httponly=True,

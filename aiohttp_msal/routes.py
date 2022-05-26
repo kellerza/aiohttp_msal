@@ -93,14 +93,15 @@ async def user_authorized(request: web.Request) -> web.Response:
             msg.append(str(err))
 
     if not msg:
+        session.pop("mail", None)
+        session.pop("name", None)
         try:
             await get_user_info(aiomsal)
             await get_manager_info(aiomsal)
         except Exception as err:  # pylint: disable=broad-except
-            session.pop("mail", None)
             msg.append("Could not get org info from MS graph")
             msg.append(str(err))
-        else:
+        if session.get("mail"):
             for lcb in ENV.login_callback:
                 await lcb(aiomsal)
 
@@ -148,12 +149,15 @@ async def user_debug(request: web.Request) -> web.Response:
     return web.json_response(debug)
 
 
+ENV.info["authenticated"] = authenticated
+
+
 @ROUTES.get("/user/info")
 @msal_session()
 async def user_info(request: web.Request, ses: AsyncMSAL) -> web.Response:
     """User info handler."""
     if not authenticated(ses):
-        return web.json_response({})
+        return web.json_response({"authenticated": False})
 
     debug = request.query.get("debug", False)
     res: dict[str, Any] = {
@@ -162,6 +166,10 @@ async def user_info(request: web.Request, ses: AsyncMSAL) -> web.Response:
         "manager_mail": ses.manager_mail,
         "manager_name": ses.manager_name,
     }
+
+    for name, testf in ENV.info.items():
+        res[name] = testf(ses)
+
     # https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent
     try:
         if debug:
