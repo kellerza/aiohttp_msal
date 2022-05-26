@@ -57,7 +57,7 @@ async def user_authorized(request: web.Request) -> web.Response:
     # build a plain dict from the aiohttp server request's url parameters
     # pre-0.1.18. Now we have response_mode="form_post"
     # auth_response = dict(request.rel_url.query.items())
-    auth_response = await request.json()
+    auth_response = dict(await request.post())
 
     msg = []
     response_cookie = 0
