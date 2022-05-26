@@ -1,5 +1,5 @@
 """Settings."""
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, Union
 
 from .settings_base import SettingsBase, Var
 
@@ -26,7 +26,7 @@ class MSALSettings(SettingsBase):
 
     login_callback: list[Callable[[Any], Awaitable[Any]]] = []
     """A list of callbacks to execute on successful login."""
-    info: dict[str, Callable[[Any], Any]] = {}
+    info: dict[str, Callable[[Any], Union[Any, Awaitable[Any]]]] = {}
     """List of attributes to return in /user/info."""
 
     REDIS = "redis://redis1:6379"

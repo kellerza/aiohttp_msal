@@ -142,6 +142,7 @@ class AsyncMSAL:
         self.session[FLOW_CACHE] = res = self.app.initiate_auth_code_flow(
             MY_SCOPE,
             redirect_uri=redirect_uri,
+            response_mode="form_post"
             # max_age=1209600,
             # max allowed 86400 - 1 day
         )

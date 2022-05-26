@@ -1,5 +1,6 @@
 """The user blueprint."""
 import time
+from inspect import iscoroutinefunction
 from typing import Any, Mapping, Sequence
 from urllib.parse import urljoin
 
@@ -48,23 +49,23 @@ async def user_login(request: web.Request) -> web.Response:
     return web.HTTPFound(redir)
 
 
-@ROUTES.get(URI_USER_AUTHORIZED)
+@ROUTES.post(URI_USER_AUTHORIZED)
 async def user_authorized(request: web.Request) -> web.Response:
     """Complete the auth code flow."""
     session = await get_session(request)
-    # ic(session)
 
     # build a plain dict from the aiohttp server request's url parameters
-    auth_response = dict(request.rel_url.query.items())
+    # pre-0.1.18. Now we have response_mode="form_post"
+    # auth_response = dict(request.rel_url.query.items())
+    auth_response = await request.json()
 
     msg = []
     response_cookie = 0
 
     # Ensure all expected variables were returned...
     if not all(auth_response.get(k) for k in ["code", "session_state", "state"]):
-        # ic(auth_response)
         msg.append(
-            "<b>Expecting code,state,session_state in URL query params.</b>"
+            "<b>Expecting code,state,session_state in post body.</b>"
             f"auth_response: {auth_response}"
         )
 
@@ -168,7 +169,10 @@ async def user_info(request: web.Request, ses: AsyncMSAL) -> web.Response:
     }
 
     for name, testf in ENV.info.items():
-        res[name] = testf(ses)
+        if iscoroutinefunction(testf):
+            res[name] = await testf(ses)
+        else:
+            res[name] = testf(ses)
 
     # https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent
     try:

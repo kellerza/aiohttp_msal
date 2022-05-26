@@ -2,7 +2,7 @@
 import logging
 from functools import wraps
 from inspect import getfullargspec, iscoroutinefunction
-from typing import Callable
+from typing import Any, Awaitable, Callable, Union
 from urllib.parse import urlparse
 
 from aiohttp import ClientSession, web
@@ -14,10 +14,10 @@ from .settings import ENV
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = 0.4
+VERSION = 0.5
 
 
-def msal_session(*args: Callable[[AsyncMSAL], bool]) -> Callable:
+def msal_session(*args: Callable[[AsyncMSAL], Union[Any, Awaitable[Any]]]) -> Callable:
     """Session decorator.
 
     Arguments can include a list of function to perform login tests etc.
@@ -28,7 +28,10 @@ def msal_session(*args: Callable[[AsyncMSAL], bool]) -> Callable:
         async def __session(request: web.Request) -> Callable:
             _ses = AsyncMSAL(session=await get_session(request))
             for arg in args:
-                if not arg(_ses):
+                if iscoroutinefunction(arg):
+                    if not await arg(_ses):
+                        raise web.HTTPForbidden
+                elif not arg(_ses):
                     raise web.HTTPForbidden
             return await func(request=request, ses=_ses)
 
