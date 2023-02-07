@@ -10,8 +10,8 @@ jobs:
     name: Check black
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - uses: psf/black@23.1.0
@@ -20,8 +20,8 @@ jobs:
     name: Check isort
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - uses: jamescurtin/isort-action@master
@@ -30,8 +30,8 @@ jobs:
     name: Check flake8
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - uses: TrueBrain/actions-flake8@master
@@ -40,8 +40,8 @@ jobs:
     name: Check pylint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Install Requirements
@@ -56,8 +56,8 @@ jobs:
     name: Check mypy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Install Requirements
@@ -71,8 +71,8 @@ jobs:
     name: Check pydocstyle
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Install Requirements
@@ -98,8 +98,8 @@ jobs:
     env:
       PYTHON: ${{ matrix.python-version }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Run tests and generate coverage report
@@ -121,9 +121,9 @@ jobs:
     needs:
       - pytest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Install pypa/build
