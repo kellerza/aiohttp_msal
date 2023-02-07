@@ -32,7 +32,7 @@ def async_wrap(func: Callable) -> Callable:
     @wraps(func)
     async def run(
         *args: Any,
-        loop: asyncio.AbstractEventLoop = None,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
         executor: Any = None,
         **kwargs: dict[str, Any],
     ) -> Callable:
@@ -100,7 +100,7 @@ class AsyncMSAL:
         """Init the class."""
         self.session = session
         if not isinstance(session, Session):
-            raise Exception(f"session required {session}")
+            raise ValueError(f"session required {session}")
 
     @property
     def token_cache(self) -> SerializableTokenCache:
