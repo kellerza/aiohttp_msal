@@ -156,8 +156,10 @@ class AsyncMSAL:
         # will raise keryerror if no cache
         auth_code_flow = self.session.pop(FLOW_CACHE)
         result = self.app.acquire_token_by_auth_code_flow(auth_code_flow, auth_response)
-        if "error" in result or "id_token_claims" not in result:
-            raise web.HTTPBadRequest(text=result)
+        if "error" in result:
+            raise web.HTTPBadRequest(text=str(result["error"]))
+        if "id_token_claims" not in result:
+            raise web.HTTPBadRequest(text=f"Expected id_token_claims in {result}")
         self._save_token_cache()
         self.session[USER_EMAIL] = result.get("id_token_claims").get(
             "preferred_username"
