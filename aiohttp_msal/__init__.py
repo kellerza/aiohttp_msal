@@ -3,7 +3,6 @@ import logging
 from functools import wraps
 from inspect import getfullargspec, iscoroutinefunction
 from typing import Any, Awaitable, Callable, Union
-from urllib.parse import urlparse
 
 from aiohttp import ClientSession, web
 from aiohttp_session import get_session
@@ -14,7 +13,7 @@ from .settings import ENV
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.5.2"
+VERSION = "0.5.4"
 
 
 def msal_session(*args: Callable[[AsyncMSAL], Union[Any, Awaitable[Any]]]) -> Callable:
@@ -56,20 +55,15 @@ async def app_init_redis_session(
     You can initialize your own aiohttp_session & storage provider.
     """
     # pylint: disable=import-outside-toplevel
-    import aioredis
+    import redis
     from aiohttp_session import redis_storage
 
     await check_proxy()
 
     _LOGGER.info("Connect to Redis %s", ENV.REDIS)
-    red = urlparse(ENV.REDIS)
     try:
-        if hasattr(aioredis, "create_redis_pool"):
-            ENV.database = await aioredis.create_redis_pool((red.hostname, red.port))
-        else:
-            # when aioredis migrates to 2.0...
-            ENV.database = aioredis.from_url(ENV.REDIS)  # pylint: disable=no-member
-            # , encoding="utf-8", decode_responses=True
+        ENV.database = redis.from_url(ENV.REDIS)  # pylint: disable=no-member
+        # , encoding="utf-8", decode_responses=True
     except ConnectionRefusedError as err:
         raise ConnectionError("Could not connect to REDIS server") from err
 
