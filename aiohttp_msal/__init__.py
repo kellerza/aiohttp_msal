@@ -55,8 +55,8 @@ async def app_init_redis_session(
     You can initialize your own aiohttp_session & storage provider.
     """
     # pylint: disable=import-outside-toplevel
-    from redis.asyncio import from_url
     from aiohttp_session import redis_storage
+    from redis.asyncio import from_url
 
     await check_proxy()
 
