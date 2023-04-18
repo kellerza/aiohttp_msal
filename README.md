@@ -1,4 +1,4 @@
-# aiohttp_msal library
+# aiohttp_msal Python library
 
 AsyncIO based OAuth using the Microsoft Authentication Library (MSAL) for Python.
 
@@ -87,4 +87,3 @@ async def user_authorized(request: web.Request) -> web.Response:
 - `get_manager_info`
 
   Get the user's manager info from MS Graph
-

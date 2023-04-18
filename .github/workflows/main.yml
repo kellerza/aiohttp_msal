@@ -62,7 +62,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Install Requirements
         run: |
-          pip install mypy .
+          pip install mypy --install-types .
       - name: Run mypy
         run: |
           mypy aiohttp_msal/
