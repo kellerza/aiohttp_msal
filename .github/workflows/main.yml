@@ -62,10 +62,10 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Install Requirements
         run: |
-          pip install mypy --install-types .
+          pip install mypy .
       - name: Run mypy
         run: |
-          mypy aiohttp_msal/
+          mypy --install-types aiohttp_msal/
 
   pydocstyle:
     name: Check pydocstyle
