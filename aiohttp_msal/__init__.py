@@ -55,14 +55,14 @@ async def app_init_redis_session(
     You can initialize your own aiohttp_session & storage provider.
     """
     # pylint: disable=import-outside-toplevel
-    import redis
+    from redis.asyncio import from_url
     from aiohttp_session import redis_storage
 
     await check_proxy()
 
     _LOGGER.info("Connect to Redis %s", ENV.REDIS)
     try:
-        ENV.database = redis.from_url(ENV.REDIS)  # pylint: disable=no-member
+        ENV.database = from_url(ENV.REDIS)  # pylint: disable=no-member
         # , encoding="utf-8", decode_responses=True
     except ConnectionRefusedError as err:
         raise ConnectionError("Could not connect to REDIS server") from err

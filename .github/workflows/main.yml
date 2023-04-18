@@ -65,7 +65,7 @@ jobs:
           pip install mypy .
       - name: Run mypy
         run: |
-          mypy --install-types aiohttp_msal/
+          mypy --install-types --non-interactive aiohttp_msal/
 
   pydocstyle:
     name: Check pydocstyle
