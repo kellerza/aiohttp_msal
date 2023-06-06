@@ -188,6 +188,8 @@ class AsyncMSAL:
             AsyncMSAL._clientsession = ClientSession(trust_env=True)
 
         token = await self.async_get_token()
+        if token is None:
+            raise web.HTTPClientError(text="No login token available.")
 
         kwargs = kwargs.copy()
         # Ensure headers exist & make a copy
@@ -195,7 +197,8 @@ class AsyncMSAL:
 
         headers["Authorization"] = "Bearer " + token["access_token"]
 
-        assert method in HTTP_ALLOWED, "Method must be one of the allowed ones"
+        if method not in HTTP_ALLOWED:
+            raise web.HTTPClientError(text=f"HTTP method {method} not allowed")
 
         if method == HTTP_GET:
             kwargs.setdefault("allow_redirects", True)

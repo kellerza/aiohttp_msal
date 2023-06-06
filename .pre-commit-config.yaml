@@ -19,7 +19,8 @@ repos:
     rev: v2.2.2
     hooks:
       - id: codespell
-        exclude: ^(.*comments_backup\.csv)$
+        # exclude: >-
+        #   ^(.*comments_backup\.csv|.*poetry.lock)$
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v0.991
     hooks:
