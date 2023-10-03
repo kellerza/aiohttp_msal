@@ -3,7 +3,7 @@ import asyncio
 import json
 import logging
 import time
-from typing import AsyncGenerator, Optional
+from typing import Any, AsyncGenerator, Optional
 
 from redis.asyncio import Redis, from_url
 
@@ -59,24 +59,29 @@ async def clean_redis(redis: Redis, max_age: int = 90) -> None:
             await redis.delete(key)
 
 
+def _session_factory(key: str, created: str, session: dict) -> AsyncMSAL:
+    """Create a session with a save callback."""
+
+    async def async_save_cache(_: dict) -> None:
+        """Save the token cache to Redis."""
+        rd2 = get_redis()
+        try:
+            await rd2.set(key, json.dumps({"created": created, "session": session}))
+        finally:
+            await rd2.close()
+
+    def save_cache(*args: Any) -> None:
+        """Save the token cache to Redis."""
+        try:
+            asyncio.get_event_loop().create_task(async_save_cache(*args))
+        except RuntimeError:
+            asyncio.run(async_save_cache(*args))
+
+    return AsyncMSAL(session, save_cache=save_cache)
+
+
 async def get_session(red: Redis, email: str) -> AsyncMSAL:
     """Get a session from Redis."""
     async for key, created, session in iter_redis(red, match={"mail": email}):
-
-        async def _save_cache(_: dict) -> None:
-            """Save the token cache to Redis."""
-            rd2 = get_redis()
-            try:
-                await rd2.set(key, json.dumps({"created": created, "session": session}))
-            finally:
-                await rd2.close()
-
-        def save_cache(ses: dict) -> None:
-            """Save the token cache to Redis."""
-            try:
-                asyncio.get_event_loop().create_task(_save_cache(ses))
-            except RuntimeError:
-                asyncio.run(_save_cache(ses))
-
-        return AsyncMSAL(session, save_cache=save_cache)
+        return _session_factory(key, created, session)
     raise ValueError(f"Session for {email} not found")
