@@ -7,7 +7,7 @@ Once you have the OAuth tokens store in the session, you are free to make reques
 import asyncio
 import json
 from functools import partial, wraps
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 from aiohttp import web
 from aiohttp.client import ClientResponse, ClientSession, _RequestContextManager
@@ -96,11 +96,20 @@ class AsyncMSAL:
     _app: ConfidentialClientApplication = None
     _clientsession: ClientSession = None  # type: ignore
 
-    def __init__(self, session: Session):
-        """Init the class."""
+    def __init__(
+        self,
+        session: Union[Session, dict[str, str]],
+        save_cache: Optional[Callable[[Union[Session, dict[str, str]]], None]] = None,
+    ):
+        """Init the class.
+
+        **save_token_cache** will be called if the token cache changes. Optional.
+          Not required when the session parameter is an aiohttp_session.Session."""
         self.session = session
-        if not isinstance(session, Session):
-            raise ValueError(f"session required {session}")
+        if save_cache:
+            self.save_token_cache = save_cache
+        if not isinstance(session, (Session, dict)):
+            raise ValueError(f"session or dict-like object required {session}")
 
     @property
     def token_cache(self) -> SerializableTokenCache:
@@ -134,11 +143,13 @@ class AsyncMSAL:
         """Save the token cache if it changed."""
         if self.token_cache.has_state_changed:
             self.session[TOKEN_CACHE] = self.token_cache.serialize()
+            if hasattr(self, "save_token_cache"):
+                self.save_token_cache(self.token_cache)
 
     def build_auth_code_flow(self, redirect_uri: str) -> str:
         """First step - Start the flow."""
-        self.session[TOKEN_CACHE] = None
-        self.session[USER_EMAIL] = None
+        self.session[TOKEN_CACHE] = None  # type: ignore
+        self.session[USER_EMAIL] = None  # type: ignore
         self.session[FLOW_CACHE] = res = self.app.initiate_auth_code_flow(
             MY_SCOPE,
             redirect_uri=redirect_uri,
@@ -149,8 +160,7 @@ class AsyncMSAL:
         # https://msal-python.readthedocs.io/en/latest/#msal.ClientApplication.initiate_auth_code_flow
         return str(res["auth_uri"])
 
-    @async_wrap
-    def async_acquire_token_by_auth_code_flow(self, auth_response: Any) -> None:
+    def acquire_token_by_auth_code_flow(self, auth_response: Any) -> None:
         """Second step - Acquire token."""
         # Assume we have it in the cache (added by /login)
         # will raise keryerror if no cache
@@ -165,8 +175,13 @@ class AsyncMSAL:
             "preferred_username"
         )
 
-    @async_wrap
-    def async_get_token(self) -> Optional[dict[str, Any]]:
+    async def async_acquire_token_by_auth_code_flow(self, auth_response: Any) -> None:
+        """Second step - Acquire token, async version."""
+        await asyncio.get_event_loop().run_in_executor(
+            None, self.acquire_token_by_auth_code_flow, auth_response
+        )
+
+    def get_token(self) -> Optional[dict[str, Any]]:
         """Acquire a token based on username."""
         accounts = self.app.get_accounts()
         if accounts:
@@ -174,6 +189,10 @@ class AsyncMSAL:
             self._save_token_cache()
             return result
         return None
+
+    async def async_get_token(self) -> Optional[dict[str, Any]]:
+        """Acquire a token based on username."""
+        return await asyncio.get_event_loop().run_in_executor(None, self.get_token)
 
     async def request(self, method: str, url: str, **kwargs: Any) -> ClientResponse:
         """Make a request to url using an oauth session.

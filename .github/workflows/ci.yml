@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-python@v3
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
-      - uses: psf/black@23.1.0
+      - uses: psf/black@23.9.1
 
   isort:
     name: Check isort
@@ -46,8 +46,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Install Requirements
         run: |
-          python -m pip install --upgrade pip
-          pip install ".[redis,tests]"
+          pip install -e ".[redis,tests]"
       - name: Run Pylint
         run: |
           pylint aiohttp_msal
@@ -88,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10"]
+        python-version: ["3.9", "3.10", "3.11"]
     needs:
       - black
       - isort
@@ -104,7 +103,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Run tests and generate coverage report
         run: |
-          python -m pip install --upgrade pip
           pip install ".[redis,tests]"
           pytest --cov=./aiohttp_msal --cov-report=xml
       - name: Upload coverage to Codecov
@@ -120,6 +118,9 @@ jobs:
     if: startsWith(github.ref, 'refs/tags')
     needs:
       - pytest
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
@@ -127,20 +128,8 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Install pypa/build
-        run: >-
-          python -m
-          pip install
-          build
-          --user
+        run: python -m pip install build --user
       - name: Build a binary wheel and a source tarball
-        run: >-
-          python -m
-          build
-          --sdist
-          --wheel
-          --outdir dist/
-          .
+        run: python -m build --sdist --wheel --outdir dist/ .
       - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+        uses: pypa/gh-action-pypi-publish@release/v1

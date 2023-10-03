@@ -6,11 +6,10 @@ Blocking MSAL functions are executed in the executor thread. Should be useful un
 
 Tested with MSAL Python 1.21.0 onward - [MSAL Python docs](https://github.com/AzureAD/microsoft-authentication-library-for-python)
 
-
 ## AsycMSAL class
 
 The AsyncMSAL class wraps the behavior in the following example app
-https://github.com/Azure-Samples/ms-identity-python-webapp/blob/master/app.py#L76
+<https://github.com/Azure-Samples/ms-identity-python-webapp/blob/master/app.py#L76>
 
 It is responsible to manage tokens & token refreshes and as a client to retrieve data using these tokens.
 
@@ -18,7 +17,7 @@ It is responsible to manage tokens & token refreshes and as a client to retrieve
 
 Firstly you should get the tokens via OAuth
 
-1.  `initiate_auth_code_flow` [referernce](https://msal-python.readthedocs.io/en/latest/#msal.PublicClientApplication.initiate_auth_code_flow)
+1. `initiate_auth_code_flow` [referernce](https://msal-python.readthedocs.io/en/latest/#msal.PublicClientApplication.initiate_auth_code_flow)
 
     The caller is expected to:
     1. somehow store this content, typically inside the current session of the server,
@@ -28,8 +27,7 @@ Firstly you should get the tokens via OAuth
 
     **Step 1** and part of **Step 3** is stored by this class in the aiohttp_session
 
-2.  `acquire_token_by_auth_code_flow` [referernce](https://msal-python.readthedocs.io/en/latest/#msal.PublicClientApplication.initiate_auth_code_flow)
-
+2. `acquire_token_by_auth_code_flow` [referernce](https://msal-python.readthedocs.io/en/latest/#msal.PublicClientApplication.initiate_auth_code_flow)
 
 ### Use the token
 
@@ -42,11 +40,11 @@ async with aiomsal.get("https://graph.microsoft.com/v1.0/me") as res:
     res = await res.json()
 ```
 
-# Example web server
+## Example web server
 
 Complete routes can be found in [routes.py](./aiohttp_msal/routes.py)
 
-## Start the login process
+### Start the login process
 
 ```python
 @ROUTES.get("/user/login")
@@ -61,7 +59,7 @@ async def user_login(request: web.Request) -> web.Response:
     return web.HTTPFound(redir)
 ```
 
-## Acquire the token after being redirected back to the server
+### Acquire the token after being redirected back to the server
 
 ```python
 @ROUTES.post(URI_USER_AUTHORIZED)
@@ -78,7 +76,7 @@ async def user_authorized(request: web.Request) -> web.Response:
 
 - `@ROUTES.get("/user/photo")`
 
-  Serve the user's photo from his Microsoft profile
+  Serve the user's photo from their Microsoft profile
 
 - `get_user_info`
 
