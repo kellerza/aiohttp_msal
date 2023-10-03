@@ -85,3 +85,28 @@ async def user_authorized(request: web.Request) -> web.Response:
 - `get_manager_info`
 
   Get the user's manager info from MS Graph
+
+## Redis tools to retrieve session tokens
+
+```python
+from aiohttp_msal import ENV, AsyncMSAL
+from aiohttp_msal.redis_tools import clean_redis, get_redis, get_session
+
+async def get_async_msal(email: str) -> AsyncMSAL:
+    """Clean redis and get a session."""
+    red = get_redis()
+    try:
+        return await get_session(red, email)
+    finally:
+        await red.close()
+
+
+def main()
+    # Uses the redis.asyncio driver to retrieve the current token
+    # Will update the token_cache if a RefreshToken was used
+    ases = asyncio.run(get_async_msal(MYEMAIL))
+    client = GraphClient(ases.get_token)
+    # ...
+    # use the Graphclient
+    # ...
+```

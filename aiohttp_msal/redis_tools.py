@@ -28,7 +28,7 @@ async def iter_redis(
     """Iterate over the Redis keys to find a specific session."""
     async for key in redis.scan_iter(count=100, match=f"{ENV.COOKIE_NAME}*"):
         sval = await redis.get(key)
-        if not isinstance(sval, str):
+        if not isinstance(sval, (str, bytes, bytearray)):
             if clean:
                 await redis.delete(key)
             continue
