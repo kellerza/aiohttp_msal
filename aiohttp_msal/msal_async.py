@@ -104,7 +104,8 @@ class AsyncMSAL:
         """Init the class.
 
         **save_token_cache** will be called if the token cache changes. Optional.
-          Not required when the session parameter is an aiohttp_session.Session."""
+          Not required when the session parameter is an aiohttp_session.Session.
+        """
         self.session = session
         if save_cache:
             self.save_token_cache = save_cache
