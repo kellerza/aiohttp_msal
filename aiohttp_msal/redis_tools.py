@@ -33,18 +33,14 @@ async def iter_redis(
                 await redis.delete(key)
             continue
         val = json.loads(sval)
-        ses = val.get("session")
+        ses = val.get("session") or {}
         created = val.get("created")
         if clean and not ses or not created:
             await redis.delete(key)
             continue
-        if match:
-            for mkey, mval in match.items():
-                if mval not in ses[mkey]:
-                    continue
-        created = val.get("created") or "0"
-        session = val.get("session") or {}
-        yield key, created, session
+        if match and not all(v in ses[k] for k, v in match.items()):
+            continue
+        yield key, created or "0", ses
 
 
 async def clean_redis(redis: Redis, max_age: int = 90) -> None:
