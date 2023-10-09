@@ -46,9 +46,7 @@ jobs:
         python-version: ["3.9", "3.10", "3.11"]
     needs:
       - black
-      - isort
-      - flake8
-      - pylint
+      - ruff
       - mypy
     env:
       PYTHON: ${{ matrix.python-version }}
