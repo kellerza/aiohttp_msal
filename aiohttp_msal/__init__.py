@@ -13,7 +13,7 @@ from .settings import ENV
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.6.3"
+VERSION = "0.6.4"
 
 
 def msal_session(*args: Callable[[AsyncMSAL], Union[Any, Awaitable[Any]]]) -> Callable:

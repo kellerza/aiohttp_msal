@@ -71,11 +71,12 @@ class AsyncMSAL:
            https://msal-python.readthedocs.io/en/latest/#msal.ClientApplication.initiate_auth_code_flow
 
            The caller is expected to:
-           1.somehow store this content, typically inside the current session of the server,
-           2.guide the end user (i.e. resource owner) to visit that auth_uri,
-             typically with a redirect
-           3.and then relay this dict and subsequent auth response to
-             acquire_token_by_auth_code_flow().
+           1. somehow store this content, typically inside the current session of the
+              server,
+           2. guide the end user (i.e. resource owner) to visit that auth_uri,
+              typically with a redirect
+           3. and then relay this dict and subsequent auth response to
+              acquire_token_by_auth_code_flow().
 
            [1. and part of 3.] is stored by this class in the aiohttp_session
 
