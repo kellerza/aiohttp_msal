@@ -23,7 +23,7 @@ HTTP_PATCH = "patch"
 HTTP_DELETE = "delete"
 HTTP_ALLOWED = [HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_PATCH, HTTP_DELETE]
 
-MY_SCOPE = ["User.Read", "User.Read.All"]
+DEFAULT_SCOPES = ["User.Read", "User.Read.All"]
 
 
 def async_wrap(func: Callable) -> Callable:
@@ -148,12 +148,14 @@ class AsyncMSAL:
             if hasattr(self, "save_token_cache"):
                 self.save_token_cache(self.token_cache)
 
-    def build_auth_code_flow(self, redirect_uri: str) -> str:
+    def build_auth_code_flow(
+        self, redirect_uri: str, scopes: Optional[list[str]] = None
+    ) -> str:
         """First step - Start the flow."""
         self.session[TOKEN_CACHE] = None  # type: ignore
         self.session[USER_EMAIL] = None  # type: ignore
         self.session[FLOW_CACHE] = res = self.app.initiate_auth_code_flow(
-            MY_SCOPE,
+            scopes or DEFAULT_SCOPES,
             redirect_uri=redirect_uri,
             response_mode="form_post"
             # max_age=1209600,
@@ -183,11 +185,13 @@ class AsyncMSAL:
             None, self.acquire_token_by_auth_code_flow, auth_response
         )
 
-    def get_token(self) -> Optional[dict[str, Any]]:
+    def get_token(self, scopes: Optional[list[str]] = None) -> Optional[dict[str, Any]]:
         """Acquire a token based on username."""
         accounts = self.app.get_accounts()
         if accounts:
-            result = self.app.acquire_token_silent(scopes=MY_SCOPE, account=accounts[0])
+            result = self.app.acquire_token_silent(
+                scopes=scopes or DEFAULT_SCOPES, account=accounts[0]
+            )
             self._save_token_cache()
             return result
         return None
