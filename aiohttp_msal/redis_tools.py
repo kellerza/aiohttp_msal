@@ -42,10 +42,13 @@ async def session_iter(
     match: Filter based on session content (i.e. mail/name)
     key_match: Filter the Redis keys. Defaults to ENV.cookie_name
     """
+    if match and not all(isinstance(v, str) for v in match.values()):
+        raise ValueError("match values must be strings")
     async for key in redis.scan_iter(
         count=100, match=key_match or f"{ENV.COOKIE_NAME}*"
     ):
         sval = await redis.get(key)
+        _LOGGER.debug("Session: %s = %s", key, sval)
         created, ses = 0, {}
         try:
             val = json.loads(sval)  # type: ignore
@@ -55,7 +58,12 @@ async def session_iter(
             pass
         if match:
             # Ensure we match all the supplied terms
-            if not all(k in ses and v in ses[k] for k, v in match.items()):
+            matches = 0
+            for mkey, mval in match.items():
+                if not (isinstance(ses.get(mkey), str) and mval in ses[mkey]):
+                    break
+                matches += 1
+            if matches != len(match):
                 continue
         yield key, created, ses
 

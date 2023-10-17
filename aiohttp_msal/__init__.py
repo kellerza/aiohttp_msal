@@ -8,12 +8,12 @@ from aiohttp import ClientSession, web
 from aiohttp_session import get_session
 from aiohttp_session import setup as _setup
 
-from .msal_async import AsyncMSAL
-from .settings import ENV
+from aiohttp_msal.msal_async import AsyncMSAL
+from aiohttp_msal.settings import ENV
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.6.5"
+VERSION = "0.6.6"
 
 
 def msal_session(*args: Callable[[AsyncMSAL], Union[Any, Awaitable[Any]]]) -> Callable:

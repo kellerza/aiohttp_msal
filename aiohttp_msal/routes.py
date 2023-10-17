@@ -7,18 +7,15 @@ from urllib.parse import urljoin
 from aiohttp import web
 from aiohttp_session import get_session, new_session
 
+from aiohttp_msal import _LOGGER, ENV, authenticated, msal_session
+from aiohttp_msal.msal_async import FLOW_CACHE, AsyncMSAL
 from aiohttp_msal.user_info import get_manager_info, get_user_info
-
-from . import _LOGGER, ENV, authenticated, msal_session
-from .msal_async import FLOW_CACHE, AsyncMSAL
 
 ROUTES = web.RouteTableDef()
 
 URI_USER_LOGIN = "/user/login"
 URI_USER_AUTHORIZED = "/user/authorized"
 SESSION_REDIRECT = "redirect"
-
-# ic.disable()  # remove debug prints
 
 
 def get_route(request: web.Request, url: str) -> str:
@@ -70,14 +67,12 @@ async def user_authorized(request: web.Request) -> web.Response:
         )
 
     if not request.cookies.get(ENV.COOKIE_NAME):
-        # ic(request.cookies.keys())
         cookies = dict(request.cookies.items())
         msg.append(f"<b>Expecting '{ENV.COOKIE_NAME}' in cookies</b>")
         _LOGGER.fatal("Cookie should be set with Samesite:None")
         msg.append(html_table(cookies))
 
     elif not session.get(FLOW_CACHE):
-        # ic(session)
         msg.append(f"<b>Expecting '{FLOW_CACHE}' in session</b>")
         msg.append(f"- Session.new: {session.new}")
         msg.append(html_table(session))
@@ -145,7 +140,6 @@ async def user_debug(request: web.Request) -> web.Response:
             "X-Forw-For IP": request.headers.get("X-Forwarded-For", ""),
         },
     }
-    # ic(debug)
     session["debug_previous"] = time.time()
     return web.json_response(debug)
 

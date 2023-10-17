@@ -14,7 +14,7 @@ from aiohttp.client import ClientResponse, ClientSession, _RequestContextManager
 from aiohttp_session import Session
 from msal import ConfidentialClientApplication, SerializableTokenCache
 
-from .settings import ENV
+from aiohttp_msal.settings import ENV
 
 HTTP_GET = "get"
 HTTP_POST = "post"

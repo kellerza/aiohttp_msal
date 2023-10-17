@@ -1,7 +1,7 @@
 """Settings."""
 from typing import Any, Awaitable, Callable, Union
 
-from .settings_base import SettingsBase, Var
+from aiohttp_msal.settings_base import SettingsBase, Var
 
 
 class MSALSettings(SettingsBase):

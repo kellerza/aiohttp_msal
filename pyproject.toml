@@ -1,4 +1,4 @@
 [tool.ruff]
-line-length = 88
+line-length = 121
 # pyflakes, pycodestyle, isort
 select = ["F", "E", "W", "I001"]

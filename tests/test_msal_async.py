@@ -1,3 +1,4 @@
+"""Test the AsyncMSAL class."""
 from aiohttp_msal.msal_async import AsyncMSAL, Session
 
 

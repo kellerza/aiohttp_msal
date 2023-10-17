@@ -3,7 +3,7 @@ import asyncio
 from functools import wraps
 from typing import Any, Callable
 
-from .msal_async import AsyncMSAL
+from aiohttp_msal.msal_async import AsyncMSAL
 
 
 def retry(func: Callable) -> Callable:
