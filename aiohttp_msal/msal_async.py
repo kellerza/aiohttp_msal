@@ -7,7 +7,7 @@ Once you have the OAuth tokens store in the session, you are free to make reques
 import asyncio
 import json
 from functools import partial, wraps
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Literal, Optional, Union
 
 from aiohttp import web
 from aiohttp.client import ClientResponse, ClientSession, _RequestContextManager
@@ -53,44 +53,12 @@ USER_EMAIL = "mail"
 class AsyncMSAL:
     """AsycMSAL class.
 
-    AsyncIO based OAuth using the Microsoft Authentication Library (MSAL) for Python.
+    Authorization Code Flow Helper. Learn more about auth-code-flow at
+    https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow
+
+    Async based OAuth using the Microsoft Authentication Library (MSAL) for Python.
     Blocking MSAL functions are executed in the executor thread.
-    Use until such time as MSAL Python gets a true async version...
-
-    Tested with MSAL Python 1.13.0
-    https://github.com/AzureAD/microsoft-authentication-library-for-python
-
-    AsyncMSAL is based on the following example app
-    https://github.com/Azure-Samples/ms-identity-python-webapp/blob/master/app.py#L76
-
-    Use as follows:
-
-        Get the tokens via oauth
-
-        1. initiate_auth_code_flow
-           https://msal-python.readthedocs.io/en/latest/#msal.ClientApplication.initiate_auth_code_flow
-
-           The caller is expected to:
-           1. somehow store this content, typically inside the current session of the
-              server,
-           2. guide the end user (i.e. resource owner) to visit that auth_uri,
-              typically with a redirect
-           3. and then relay this dict and subsequent auth response to
-              acquire_token_by_auth_code_flow().
-
-           [1. and part of 3.] is stored by this class in the aiohttp_session
-
-        2. acquire_token_by_auth_code_flow
-           https://msal-python.readthedocs.io/en/latest/#msal.ClientApplication.acquire_token_by_auth_code_flow
-
-
-        Now you are free to make requests (typically from an aiohttp server)
-
-            session = await get_session(request)
-            aiomsal = AsyncMSAL(session)
-            async with aiomsal.get("https://graph.microsoft.com/v1.0/me") as res:
-                res = await res.json()
-
+    Use until such time as MSAL Python gets a true async version.
     """
 
     _token_cache: SerializableTokenCache = None
@@ -149,7 +117,11 @@ class AsyncMSAL:
                 self.save_token_cache(self.token_cache)
 
     def build_auth_code_flow(
-        self, redirect_uri: str, scopes: Optional[list[str]] = None
+        self,
+        redirect_uri: str,
+        scopes: Optional[list[str]] = None,
+        prompt: Optional[Literal["login", "consent", "select_account", "none"]] = None,
+        **kwargs: Any,
     ) -> str:
         """First step - Start the flow."""
         self.session[TOKEN_CACHE] = None  # type: ignore
@@ -157,7 +129,9 @@ class AsyncMSAL:
         self.session[FLOW_CACHE] = res = self.app.initiate_auth_code_flow(
             scopes or DEFAULT_SCOPES,
             redirect_uri=redirect_uri,
-            response_mode="form_post"
+            response_mode="form_post",
+            prompt=prompt,
+            **kwargs
             # max_age=1209600,
             # max allowed 86400 - 1 day
         )

@@ -13,7 +13,7 @@ from aiohttp_msal.settings import ENV
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.6.6"
+VERSION = "0.6.7"
 
 
 def msal_session(*args: Callable[[AsyncMSAL], Union[Any, Awaitable[Any]]]) -> Callable:

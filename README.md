@@ -1,8 +1,12 @@
 # aiohttp_msal Python library
 
-AsyncIO based OAuth using the Microsoft Authentication Library (MSAL) for Python.
+Authorization Code Flow Helper. Learn more about auth-code-flow at
+<https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow>
 
-Blocking MSAL functions are executed in the executor thread. Should be useful until such time as MSAL Python gets a true async version...
+Async based OAuth using the Microsoft Authentication Library (MSAL) for Python.
+
+Blocking MSAL functions are executed in the executor thread.
+Should be useful until such time as MSAL Python gets a true async version.
 
 Tested with MSAL Python 1.21.0 onward - [MSAL Python docs](https://github.com/AzureAD/microsoft-authentication-library-for-python)
 
