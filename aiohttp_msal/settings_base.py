@@ -1,4 +1,7 @@
 """Settings Base."""
+
+from __future__ import annotations
+
 import logging
 import os
 from pathlib import Path
@@ -9,7 +12,7 @@ class Var:  # pylint: disable=too-few-public-methods
     """Variable settings."""
 
     @staticmethod
-    def from_value(val: Any):  # type: ignore
+    def from_value(val: Any) -> Var:
         """Ensure the return is an instance of Var."""
         return val if isinstance(val, Var) else Var(type(val))
 

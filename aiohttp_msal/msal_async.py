@@ -4,6 +4,7 @@ The AsyncMSAL class contains more info to perform OAuth & get the required token
 Once you have the OAuth tokens store in the session, you are free to make requests
 (typically from an aiohttp server's inside a request)
 """
+
 import asyncio
 import json
 from functools import partial, wraps
@@ -131,7 +132,7 @@ class AsyncMSAL:
             redirect_uri=redirect_uri,
             response_mode="form_post",
             prompt=prompt,
-            **kwargs
+            **kwargs,
             # max_age=1209600,
             # max allowed 86400 - 1 day
         )

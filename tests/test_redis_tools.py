@@ -1,4 +1,5 @@
 """Test redis tools."""
+
 from json import dumps
 from typing import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock, Mock, call

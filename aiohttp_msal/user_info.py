@@ -1,4 +1,5 @@
 """Graph User Info."""
+
 import asyncio
 from functools import wraps
 from typing import Any, Callable

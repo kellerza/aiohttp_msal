@@ -1,7 +1,13 @@
 """Settings."""
-from typing import Any, Awaitable, Callable, Union
+
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Union
 
 from aiohttp_msal.settings_base import SettingsBase, Var
+
+if TYPE_CHECKING:
+    from redis.asyncio import Redis
+else:
+    Redis = Any
 
 
 class MSALSettings(SettingsBase):
@@ -31,7 +37,7 @@ class MSALSettings(SettingsBase):
 
     REDIS = "redis://redis1:6379"
     """OPTIONAL: Redis database connection used by app_init_redis_session()."""
-    database: Any = None
+    database: Redis
     """Store the Redis connection when using app_init_redis_session()."""
 
 

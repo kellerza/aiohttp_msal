@@ -1,4 +1,5 @@
 """Redis tools for sessions."""
+
 import asyncio
 import json
 import logging
@@ -24,7 +25,7 @@ async def get_redis() -> AsyncGenerator[Redis, None]:
         yield ENV.database
         return
     _LOGGER.info("Connect to Redis %s", ENV.REDIS)
-    redis = from_url(ENV.REDIS)
+    redis = from_url(ENV.REDIS, decode_responses=True)
     try:
         yield redis
     finally:

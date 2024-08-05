@@ -1,4 +1,5 @@
 """The user blueprint."""
+
 import time
 from inspect import iscoroutinefunction
 from typing import Any, Mapping, Sequence
