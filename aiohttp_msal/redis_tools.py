@@ -10,7 +10,7 @@ from typing import Any, AsyncGenerator, Optional
 from redis.asyncio import Redis, from_url
 
 from aiohttp_msal.msal_async import AsyncMSAL
-from aiohttp_msal.settings import ENV
+from aiohttp_msal.settings import ENV as MENV
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,15 +20,17 @@ SES_KEYS = ("mail", "name", "m_mail", "m_name")
 @asynccontextmanager
 async def get_redis() -> AsyncGenerator[Redis, None]:
     """Get a Redis connection."""
-    if ENV.database:
+    if MENV.database:
         _LOGGER.debug("Using redis from environment")
-        yield ENV.database
+        yield MENV.database
         return
-    _LOGGER.info("Connect to Redis %s", ENV.REDIS)
-    redis = from_url(ENV.REDIS, decode_responses=True)
+    _LOGGER.info("Connect to Redis %s", MENV.REDIS)
+    redis = from_url(MENV.REDIS)  # decode_responses=True not allowed aiohttp_session
+    MENV.database = redis
     try:
         yield redis
     finally:
+        MENV.database = None  # type:ignore
         await redis.close()
 
 
@@ -46,10 +48,11 @@ async def session_iter(
     if match and not all(isinstance(v, str) for v in match.values()):
         raise ValueError("match values must be strings")
     async for key in redis.scan_iter(
-        count=100, match=key_match or f"{ENV.COOKIE_NAME}*"
+        count=100, match=key_match or f"{MENV.COOKIE_NAME}*"
     ):
+        if not isinstance(key, str):
+            key = key.decode()
         sval = await redis.get(key)
-        _LOGGER.debug("Session: %s = %s", key, sval)
         created, ses = 0, {}
         try:
             val = json.loads(sval)  # type: ignore
@@ -111,11 +114,67 @@ def _session_factory(key: str, created: str, session: dict) -> AsyncMSAL:
     return AsyncMSAL(session, save_cache=save_cache)
 
 
-async def get_session(email: str, *, redis: Optional[Redis] = None) -> AsyncMSAL:
+async def get_session(
+    email: str, *, redis: Optional[Redis] = None, scope: str = ""
+) -> AsyncMSAL:
     """Get a session from Redis."""
+    cnt = 0
     async with AsyncExitStack() as stack:
         if redis is None:
             redis = await stack.enter_async_context(get_redis())
         async for key, created, session in session_iter(redis, match={"mail": email}):
+            cnt += 1
+            if scope and scope not in str(session.get("token_cache")).lower():
+                continue
             return _session_factory(key, str(created), session)
-    raise ValueError(f"Session for {email} not found")
+    msg = f"Session for {email}"
+    if not scope:
+        raise ValueError(f"{msg} not found")
+    raise ValueError(f"{msg} with scope {scope} not found ({cnt} checked)")
+
+
+async def redis_get_json(key: str) -> list | dict | None:
+    """Get a key from redis."""
+    res = await MENV.database.get(key)
+    if isinstance(res, (str, bytes, bytearray)):
+        return json.loads(res)
+    if res is not None:
+        _LOGGER.warning("Unexpected type for %s: %s", key, type(res))
+    return None
+
+
+async def redis_get(key: str) -> str | None:
+    """Get a key from redis."""
+    res = await MENV.database.get(key)
+    if isinstance(res, str):
+        return res
+    if isinstance(res, (bytes, bytearray)):
+        return res.decode()
+    if res is not None:
+        _LOGGER.warning("Unexpected type for %s: %s", key, type(res))
+    return None
+
+
+async def redis_set_set(key: str, new_set: set[str]) -> None:
+    """Set the value of a set in redis."""
+    cur_set = set(
+        s if isinstance(s, str) else s.decode()
+        for s in await MENV.database.smembers(key)
+    )
+    dif = list(cur_set - new_set)
+    if dif:
+        _LOGGER.warning("%s: removing %s", key, dif)
+        await MENV.database.srem(key, *dif)
+
+    dif = list(new_set - cur_set)
+    if dif:
+        _LOGGER.info("%s: adding %s", key, dif)
+        await MENV.database.sadd(key, *dif)
+
+
+async def redis_scan(match_str: str) -> list[str]:
+    """Return a list of matching keys."""
+    return [
+        s if isinstance(s, str) else s.decode()
+        async for s in MENV.database.scan_iter(match=match_str)
+    ]
