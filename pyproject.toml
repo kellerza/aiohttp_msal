@@ -46,6 +46,7 @@ disable = [
 # the use of guard clauses. So we increase the
 # allowed number of returns from 6 to 8
 max-returns = 8
+
 [tool.pytest.ini_options]
 pythonpath = [".", "src"]
 filterwarnings = "ignore:.+@coroutine.+deprecated.+"
@@ -54,3 +55,11 @@ norecursedirs = [".git", "modules"]
 log_cli = true
 log_cli_level = "DEBUG"
 asyncio_mode = "auto"
+env = [
+    "X_SP_APP_PW=p1",
+    "X_SP_APP_ID=i1",
+    "X_SP_AUTHORITY=a1",
+    "SP_APP_PW=p2",
+    "SP_APP_ID=i2",
+    "SP_AUTHORITY=a2",
+]

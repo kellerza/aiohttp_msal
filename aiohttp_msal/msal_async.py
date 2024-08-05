@@ -8,7 +8,7 @@ Once you have the OAuth tokens store in the session, you are free to make reques
 import asyncio
 import json
 from functools import partial, wraps
-from typing import Any, Callable, Literal, Optional, Union
+from typing import Any, Callable, Literal
 
 from aiohttp import web
 from aiohttp.client import ClientResponse, ClientSession, _RequestContextManager
@@ -33,7 +33,7 @@ def async_wrap(func: Callable) -> Callable:
     @wraps(func)
     async def run(
         *args: Any,
-        loop: Optional[asyncio.AbstractEventLoop] = None,
+        loop: asyncio.AbstractEventLoop | None = None,
         executor: Any = None,
         **kwargs: dict[str, Any],
     ) -> Callable:
@@ -68,8 +68,8 @@ class AsyncMSAL:
 
     def __init__(
         self,
-        session: Union[Session, dict[str, str]],
-        save_cache: Optional[Callable[[Union[Session, dict[str, str]]], None]] = None,
+        session: Session | dict[str, str],
+        save_cache: Callable[[Session | dict[str, str]], None] | None = None,
     ):
         """Init the class.
 
@@ -120,8 +120,8 @@ class AsyncMSAL:
     def build_auth_code_flow(
         self,
         redirect_uri: str,
-        scopes: Optional[list[str]] = None,
-        prompt: Optional[Literal["login", "consent", "select_account", "none"]] = None,
+        scopes: list[str] | None = None,
+        prompt: Literal["login", "consent", "select_account", "none"] | None = None,
         **kwargs: Any,
     ) -> str:
         """First step - Start the flow."""
@@ -160,7 +160,7 @@ class AsyncMSAL:
             None, self.acquire_token_by_auth_code_flow, auth_response
         )
 
-    def get_token(self, scopes: Optional[list[str]] = None) -> Optional[dict[str, Any]]:
+    def get_token(self, scopes: list[str] | None = None) -> dict[str, Any] | None:
         """Acquire a token based on username."""
         accounts = self.app.get_accounts()
         if accounts:
@@ -171,7 +171,7 @@ class AsyncMSAL:
             return result
         return None
 
-    async def async_get_token(self) -> Optional[dict[str, Any]]:
+    async def async_get_token(self) -> dict[str, Any] | None:
         """Acquire a token based on username."""
         return await asyncio.get_event_loop().run_in_executor(None, self.get_token)
 

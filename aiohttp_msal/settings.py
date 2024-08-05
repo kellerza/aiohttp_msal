@@ -1,6 +1,6 @@
 """Settings."""
 
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Union
+from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
 from aiohttp_msal.settings_base import SettingsBase, Var
 
@@ -32,7 +32,7 @@ class MSALSettings(SettingsBase):
 
     login_callback: list[Callable[[Any], Awaitable[Any]]] = []
     """A list of callbacks to execute on successful login."""
-    info: dict[str, Callable[[Any], Union[Any, Awaitable[Any]]]] = {}
+    info: dict[str, Callable[[Any], Any | Awaitable[Any]]] = {}
     """List of attributes to return in /user/info."""
 
     REDIS = "redis://redis1:6379"
