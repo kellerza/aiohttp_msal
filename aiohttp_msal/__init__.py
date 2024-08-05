@@ -18,8 +18,8 @@ VERSION = "0.6.8"
 
 
 def msal_session(
-    *args: typing.Callable[[AsyncMSAL], bool | typing.Awaitable[bool]],
-    any: bool | None = False,
+    *callbacks: typing.Callable[[AsyncMSAL], bool | typing.Awaitable[bool]],
+    at_least_one: bool | None = False,
 ) -> typing.Callable:
     """Session decorator.
 
@@ -29,14 +29,14 @@ def msal_session(
     def _session(func: typing.Callable) -> typing.Callable:
         @wraps(func)
         async def __session(request: web.Request) -> typing.Callable:
-            _ses = AsyncMSAL(session=await get_session(request))
-            for arg in args:
-                _ok = await arg(_ses) if iscoroutinefunction(arg) else arg(_ses)
-                if any and _ok:
+            ses = AsyncMSAL(session=await get_session(request))
+            for c_b in callbacks:
+                _ok = await c_b(ses) if iscoroutinefunction(c_b) else c_b(ses)
+                if at_least_one and _ok:
                     break
-                if not any and not _ok:
+                if not at_least_one and not _ok:
                     raise web.HTTPForbidden
-            return await func(request=request, ses=_ses)
+            return await func(request=request, ses=ses)
 
         assert iscoroutinefunction(func), f"Function needs to be a coroutine: {func}"
         spec = getfullargspec(func)

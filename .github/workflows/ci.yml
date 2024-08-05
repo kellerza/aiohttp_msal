@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-python@v3
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
-      - uses: psf/black@23.9.1
+      - uses: psf/black@24.8.0
 
   ruff:
     runs-on: ubuntu-latest
