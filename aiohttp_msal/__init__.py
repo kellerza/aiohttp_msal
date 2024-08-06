@@ -46,7 +46,7 @@ def msal_session(
     return _session
 
 
-def auth_ok(ses: AsyncMSAL) -> bool:
+def authenticated(ses: AsyncMSAL) -> bool:
     """Test if session was authenticated."""
     return bool(ses.mail)
 
