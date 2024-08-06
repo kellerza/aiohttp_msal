@@ -14,7 +14,7 @@ from aiohttp_msal.settings import ENV
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.6.8"
+VERSION = "0.7.0"
 
 
 def msal_session(
@@ -46,9 +46,29 @@ def msal_session(
     return _session
 
 
-def authenticated(ses: AsyncMSAL) -> bool:
+def auth_ok(ses: AsyncMSAL) -> bool:
     """Test if session was authenticated."""
     return bool(ses.mail)
+
+
+def auth_or(
+    *args: typing.Callable[[AsyncMSAL], bool | typing.Awaitable[bool]]
+) -> typing.Callable[[AsyncMSAL], typing.Awaitable[bool]]:
+    """Ensure either of the methods is valid. An alternative to at_least_one=True.
+
+    Arguments can include a list of function to perform login tests etc."""
+
+    async def or_auth(ses: AsyncMSAL) -> bool:
+        """Or."""
+        for arg in args:
+            if iscoroutinefunction(arg):
+                if await arg(ses):
+                    return True
+            elif arg(ses):
+                return True
+        raise web.HTTPForbidden
+
+    return or_auth
 
 
 async def app_init_redis_session(

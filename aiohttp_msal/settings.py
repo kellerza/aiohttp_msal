@@ -37,7 +37,7 @@ class MSALSettings(SettingsBase):
 
     REDIS = "redis://redis1:6379"
     """OPTIONAL: Redis database connection used by app_init_redis_session()."""
-    database: Redis
+    database: Redis = None  # type: ignore
     """Store the Redis connection when using app_init_redis_session()."""
 
 
