@@ -8,7 +8,7 @@ from urllib.parse import urljoin
 from aiohttp import web
 from aiohttp_session import get_session, new_session
 
-from aiohttp_msal import _LOGGER, ENV, authenticated, msal_session
+from aiohttp_msal import _LOGGER, ENV, auth_ok, msal_session
 from aiohttp_msal.msal_async import FLOW_CACHE, AsyncMSAL
 from aiohttp_msal.user_info import get_manager_info, get_user_info
 
@@ -145,14 +145,14 @@ async def user_debug(request: web.Request) -> web.Response:
     return web.json_response(debug)
 
 
-ENV.info["authenticated"] = authenticated
+ENV.info["authenticated"] = auth_ok
 
 
 @ROUTES.get("/user/info")
 @msal_session()
 async def user_info(request: web.Request, ses: AsyncMSAL) -> web.Response:
     """User info handler."""
-    if not authenticated(ses):
+    if not auth_ok(ses):
         return web.json_response({"authenticated": False})
 
     debug = request.query.get("debug", False)
@@ -182,7 +182,7 @@ async def user_info(request: web.Request, ses: AsyncMSAL) -> web.Response:
 
 @ROUTES.get("/user/logout")
 @ROUTES.get("/user/logout/{to:.+$}")
-@msal_session(authenticated)
+@msal_session(auth_ok)
 async def user_logout(request: web.Request, ses: AsyncMSAL) -> web.Response:
     """Redirect to MS graph login page."""
     ses.session.clear()
@@ -202,7 +202,7 @@ async def user_logout(request: web.Request, ses: AsyncMSAL) -> web.Response:
 
 
 @ROUTES.get("/user/photo")
-@msal_session(authenticated)
+@msal_session(auth_ok)
 async def user_photo(request: web.Request, ses: AsyncMSAL) -> web.StreamResponse:
     """Photo."""
     async with ses.get("https://graph.microsoft.com/v1.0/me/photo/$value") as res:

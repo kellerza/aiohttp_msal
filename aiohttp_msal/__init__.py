@@ -14,7 +14,7 @@ from aiohttp_msal.settings import ENV
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.7.0"
+VERSION = "0.7.1"
 
 
 def msal_session(
@@ -32,10 +32,17 @@ def msal_session(
             ses = AsyncMSAL(session=await get_session(request))
             for c_b in callbacks:
                 _ok = await c_b(ses) if iscoroutinefunction(c_b) else c_b(ses)
-                if at_least_one and _ok:
-                    break
-                if not at_least_one and not _ok:
+
+                if at_least_one:
+                    if _ok:
+                        return await func(request=request, ses=ses)
+                    continue
+
+                if not _ok:
                     raise web.HTTPForbidden
+
+            if at_least_one:
+                raise web.HTTPForbidden
             return await func(request=request, ses=ses)
 
         assert iscoroutinefunction(func), f"Function needs to be a coroutine: {func}"
@@ -46,7 +53,7 @@ def msal_session(
     return _session
 
 
-def authenticated(ses: AsyncMSAL) -> bool:
+def auth_ok(ses: AsyncMSAL) -> bool:
     """Test if session was authenticated."""
     return bool(ses.mail)
 
