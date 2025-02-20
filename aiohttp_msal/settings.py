@@ -1,5 +1,6 @@
 """Settings."""
 
+# pylint:disable=invalid-name
 import typing as t
 
 import attrs
