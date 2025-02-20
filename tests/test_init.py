@@ -48,11 +48,13 @@ async def test_include_any(get_session: MagicMock) -> None:
 
     for func in [t_2yes, t_1no1yes_ok]:
         assert await func({}) is True
+    assert get_session.call_count == 2
 
     for func in [t_1no1yes_nok, t_2no_nok, t_2noa_nok]:
         with pytest.raises(Exception) as err:
             assert await func({}) is True
         assert "Forbidden" in str(err)
+    assert get_session.call_count == 5
 
 
 async def func(request: dict, ses: AsyncMSAL) -> bool:
@@ -67,6 +69,7 @@ async def test_msal_session_auth(get_session: MagicMock) -> None:
     assert await msal_session(a_yes, a_no, at_least_one=True)(func)({})
     assert await msal_session(a_no, a_yes, at_least_one=True)(func)({})
     assert await msal_session(a_no, a_no, a_no, a_yes, at_least_one=True)(func)({})
+    assert get_session.call_count == 4
 
     with pytest.raises(Exception):
         await msal_session(a_yes, a_no)(func)({})
@@ -76,6 +79,7 @@ async def test_msal_session_auth(get_session: MagicMock) -> None:
 
     with pytest.raises(Exception):
         await msal_session(a_no, a_no, at_least_one=True)(func)({})
+    assert get_session.call_count == 7
 
 
 @patch("aiohttp_msal.get_session")

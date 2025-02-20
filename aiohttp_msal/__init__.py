@@ -31,7 +31,7 @@ def msal_session(
         @wraps(func)
         async def wrapper(*args: *Ts) -> _T:
             if len(args) < 1:
-                raise web.HTTPForbidden
+                raise AssertionError("Requires a Request as the first parameter")
             request = t.cast(web.Request, args[0])
             ses = AsyncMSAL(session=await get_session(request))
             for c_b in callbacks:
@@ -40,7 +40,6 @@ def msal_session(
                 if at_least_one:
                     if _ok:
                         return await func(*args, ses)
-                    continue
                 elif not _ok:
                     raise web.HTTPForbidden
 
