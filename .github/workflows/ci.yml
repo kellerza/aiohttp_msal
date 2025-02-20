@@ -122,5 +122,6 @@ jobs:
         run: uv build
 
       - name: Publish distribution 📦 to PyPI
-        run: uv publish -t ${{ secrets.PYPI_API_TOKEN }}
+        run: uv publish
+      # Using trusted publisher -t ${{ secrets.PYPI_API_TOKEN }}
       #   uses: pypa/gh-action-pypi-publish@release/v1
