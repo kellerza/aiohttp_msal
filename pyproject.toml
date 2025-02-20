@@ -14,11 +14,11 @@ classifiers = [
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "aiohttp>=3.8",
     "aiohttp_session>=2.12",
@@ -53,6 +53,9 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 # requires = ["uv-build"] # >=0.5.15,<0.6
 # build-backend = "uv_build"
+
+[tool.setuptools]
+license-files = [] # https://github.com/astral-sh/uv/issues/9513
 
 [tool.ruff]
 line-length = 121
