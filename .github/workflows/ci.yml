@@ -56,7 +56,7 @@ jobs:
         run: uv pip install --system .[aioredis,tests]
 
       - name: Run mypy
-        run: mypy --non-interactive aiohttp_msal/
+        run: mypy --install-types --non-interactive aiohttp_msal/
 
   pytest:
     name: Run tests Python ${{ matrix.python-version }}
