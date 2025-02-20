@@ -47,9 +47,7 @@ async def session_iter(
     """
     if match and not all(isinstance(v, str) for v in match.values()):
         raise ValueError("match values must be strings")
-    async for key in redis.scan_iter(
-        count=100, match=key_match or f"{MENV.COOKIE_NAME}*"
-    ):
+    async for key in redis.scan_iter(count=100, match=key_match or f"{MENV.COOKIE_NAME}*"):
         if not isinstance(key, str):
             key = key.decode()
         sval = await redis.get(key)
@@ -72,9 +70,7 @@ async def session_iter(
         yield key, created, ses
 
 
-async def session_clean(
-    redis: Redis, *, max_age: int = 90, expected_keys: Optional[dict] = None
-) -> None:
+async def session_clean(redis: Redis, *, max_age: int = 90, expected_keys: Optional[dict] = None) -> None:
     """Clear session entries older than max_age days."""
     rem, keep = 0, 0
     expire = int(time.time() - max_age * 24 * 60 * 60)
@@ -114,9 +110,7 @@ def _session_factory(key: str, created: str, session: dict) -> AsyncMSAL:
     return AsyncMSAL(session, save_cache=save_cache)
 
 
-async def get_session(
-    email: str, *, redis: Optional[Redis] = None, scope: str = ""
-) -> AsyncMSAL:
+async def get_session(email: str, *, redis: Optional[Redis] = None, scope: str = "") -> AsyncMSAL:
     """Get a session from Redis."""
     cnt = 0
     async with AsyncExitStack() as stack:
@@ -157,10 +151,7 @@ async def redis_get(key: str) -> str | None:
 
 async def redis_set_set(key: str, new_set: set[str]) -> None:
     """Set the value of a set in redis."""
-    cur_set = set(
-        s if isinstance(s, str) else s.decode()
-        for s in await MENV.database.smembers(key)
-    )
+    cur_set = set(s if isinstance(s, str) else s.decode() for s in await MENV.database.smembers(key))
     dif = list(cur_set - new_set)
     if dif:
         _LOGGER.warning("%s: removing %s", key, dif)
@@ -174,7 +165,4 @@ async def redis_set_set(key: str, new_set: set[str]) -> None:
 
 async def redis_scan(match_str: str) -> list[str]:
     """Return a list of matching keys."""
-    return [
-        s if isinstance(s, str) else s.decode()
-        async for s in MENV.database.scan_iter(match=match_str)
-    ]
+    return [s if isinstance(s, str) else s.decode() async for s in MENV.database.scan_iter(match=match_str)]

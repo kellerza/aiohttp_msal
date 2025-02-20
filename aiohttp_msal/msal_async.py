@@ -150,23 +150,17 @@ class AsyncMSAL:
         if "id_token_claims" not in result:
             raise web.HTTPBadRequest(text=f"Expected id_token_claims in {result}")
         self._save_token_cache()
-        self.session[USER_EMAIL] = result.get("id_token_claims").get(
-            "preferred_username"
-        )
+        self.session[USER_EMAIL] = result.get("id_token_claims").get("preferred_username")
 
     async def async_acquire_token_by_auth_code_flow(self, auth_response: Any) -> None:
         """Second step - Acquire token, async version."""
-        await asyncio.get_event_loop().run_in_executor(
-            None, self.acquire_token_by_auth_code_flow, auth_response
-        )
+        await asyncio.get_event_loop().run_in_executor(None, self.acquire_token_by_auth_code_flow, auth_response)
 
     def get_token(self, scopes: list[str] | None = None) -> dict[str, Any] | None:
         """Acquire a token based on username."""
         accounts = self.app.get_accounts()
         if accounts:
-            result = self.app.acquire_token_silent(
-                scopes=scopes or DEFAULT_SCOPES, account=accounts[0]
-            )
+            result = self.app.acquire_token_silent(scopes=scopes or DEFAULT_SCOPES, account=accounts[0])
             self._save_token_cache()
             return result
         return None

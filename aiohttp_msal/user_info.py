@@ -1,17 +1,20 @@
 """Graph User Info."""
 
 import asyncio
+import typing as t
 from functools import wraps
-from typing import Any, Callable
 
 from aiohttp_msal.msal_async import AsyncMSAL
 
+_T = t.TypeVar("_T")
+_P = t.ParamSpec("_P")
 
-def retry(func: Callable) -> Callable:
+
+def retry(func: t.Callable[_P, t.Awaitable[_T]]) -> t.Callable[_P, t.Awaitable[_T]]:
     """Retry if tenacity is installed."""
 
     @wraps(func)
-    async def _retry(*args: Any, **kwargs: Any) -> Any:
+    async def _retry(*args: _P.args, **kwargs: _P.kwargs) -> _T:
         """Retry the request."""
         retries = [2, 4, 8]
         while True:
@@ -36,9 +39,7 @@ async def get_user_info(aiomsal: AsyncMSAL) -> None:
             aiomsal.session["mail"] = body["mail"]
             aiomsal.session["name"] = body["displayName"]
         except KeyError as err:
-            raise KeyError(
-                f"Unexpected return from Graph endpoint: {body}: {err}"
-            ) from err
+            raise KeyError(f"Unexpected return from Graph endpoint: {body}: {err}") from err
 
 
 @retry
@@ -50,6 +51,4 @@ async def get_manager_info(aiomsal: AsyncMSAL) -> None:
             aiomsal.session["m_mail"] = body["mail"]
             aiomsal.session["m_name"] = body["displayName"]
         except KeyError as err:
-            raise KeyError(
-                f"Unexpected return from Graph endpoint: {body}: {err}"
-            ) from err
+            raise KeyError(f"Unexpected return from Graph endpoint: {body}: {err}") from err

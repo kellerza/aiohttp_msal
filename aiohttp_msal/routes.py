@@ -62,10 +62,7 @@ async def user_authorized(request: web.Request) -> web.Response:
 
     # Ensure all expected variables were returned...
     if not all(auth_response.get(k) for k in ["code", "session_state", "state"]):
-        msg.append(
-            "<b>Expecting code,state,session_state in post body.</b>"
-            f"auth_response: {auth_response}"
-        )
+        msg.append(f"<b>Expecting code,state,session_state in post body.</b>auth_response: {auth_response}")
 
     if not request.cookies.get(ENV.COOKIE_NAME):
         cookies = dict(request.cookies.items())
@@ -84,9 +81,7 @@ async def user_authorized(request: web.Request) -> web.Response:
         try:
             await aiomsal.async_acquire_token_by_auth_code_flow(auth_response)
         except Exception as err:  # pylint: disable=broad-except
-            msg.append(
-                "<b>Could not get token</b> - async_acquire_token_by_auth_code_flow"
-            )
+            msg.append("<b>Could not get token</b> - async_acquire_token_by_auth_code_flow")
             msg.append(str(err))
 
     if not msg:
@@ -196,8 +191,7 @@ async def user_logout(request: web.Request, ses: AsyncMSAL) -> web.Response:
         _to = get_route(request, _to)
 
     return web.HTTPFound(
-        "https://login.microsoftonline.com/common/oauth2/logout?"
-        f"post_logout_redirect_uri={_to}"
+        f"https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri={_to}"
     )  # redirect
 
 

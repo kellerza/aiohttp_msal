@@ -1,7 +1,7 @@
 """aiohttp_msal."""
 
 import logging
-import typing
+import typing as t
 from functools import wraps
 from inspect import getfullargspec, iscoroutinefunction
 
@@ -14,28 +14,32 @@ from aiohttp_msal.settings import ENV
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.7.1"
+_T = t.TypeVar("_T")
+Ts = t.TypeVarTuple("Ts")
 
 
 def msal_session(
-    *callbacks: typing.Callable[[AsyncMSAL], bool | typing.Awaitable[bool]],
+    *callbacks: t.Callable[[AsyncMSAL], bool | t.Awaitable[bool]],
     at_least_one: bool | None = False,
-) -> typing.Callable:
+) -> t.Callable[[t.Callable[[*Ts, AsyncMSAL], t.Awaitable[_T]]], t.Callable[[*Ts], t.Awaitable[_T]]]:
     """Session decorator.
 
     Arguments can include a list of function to perform login tests etc.
     """
 
-    def _session(func: typing.Callable) -> typing.Callable:
+    def check_session(func: t.Callable[[*Ts, AsyncMSAL], t.Awaitable[_T]]) -> t.Callable[[*Ts], t.Awaitable[_T]]:
         @wraps(func)
-        async def __session(request: web.Request) -> typing.Callable:
+        async def wrapper(*args: *Ts) -> _T:
+            if len(args) < 1:
+                raise web.HTTPForbidden
+            request = t.cast(web.Request, args[0])
             ses = AsyncMSAL(session=await get_session(request))
             for c_b in callbacks:
                 _ok = await c_b(ses) if iscoroutinefunction(c_b) else c_b(ses)
 
                 if at_least_one:
                     if _ok:
-                        return await func(request=request, ses=ses)
+                        return await func(*args, ses)
                     continue
 
                 if not _ok:
@@ -43,14 +47,14 @@ def msal_session(
 
             if at_least_one:
                 raise web.HTTPForbidden
-            return await func(request=request, ses=ses)
+            return await func(*args, ses)
 
         assert iscoroutinefunction(func), f"Function needs to be a coroutine: {func}"
         spec = getfullargspec(func)
         assert "ses" in spec.args, f"Function needs to accept a session 'ses': {func}"
-        return __session
+        return wrapper
 
-    return _session
+    return check_session
 
 
 def auth_ok(ses: AsyncMSAL) -> bool:
@@ -58,9 +62,7 @@ def auth_ok(ses: AsyncMSAL) -> bool:
     return bool(ses.mail)
 
 
-def auth_or(
-    *args: typing.Callable[[AsyncMSAL], bool | typing.Awaitable[bool]]
-) -> typing.Callable[[AsyncMSAL], typing.Awaitable[bool]]:
+def auth_or(*args: t.Callable[[AsyncMSAL], bool | t.Awaitable[bool]]) -> t.Callable[[AsyncMSAL], t.Awaitable[bool]]:
     """Ensure either of the methods is valid. An alternative to at_least_one=True.
 
     Arguments can include a list of function to perform login tests etc."""
@@ -78,9 +80,7 @@ def auth_or(
     return or_auth
 
 
-async def app_init_redis_session(
-    app: web.Application, max_age: int = 3600 * 24 * 90
-) -> None:
+async def app_init_redis_session(app: web.Application, max_age: int = 3600 * 24 * 90) -> None:
     """OPTIONAL: Initialize aiohttp_session with Redis storage.
 
     You can initialize your own aiohttp_session & storage provider.
@@ -120,6 +120,4 @@ async def check_proxy() -> None:
                     return
                 raise ConnectionError(await resp.text())
     except Exception as err:  # pylint: disable=broad-except
-        raise ConnectionError(
-            "No connection to the Internet. Required for OAuth. Check your Proxy?"
-        ) from err
+        raise ConnectionError("No connection to the Internet. Required for OAuth. Check your Proxy?") from err

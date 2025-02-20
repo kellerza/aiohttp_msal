@@ -15,9 +15,7 @@ class Var:  # pylint: disable=too-few-public-methods
         """Ensure the return is an instance of Var."""
         return val if isinstance(val, Var) else Var(type(val))
 
-    def __init__(
-        self, var_type: Type, hidden: bool = False, required: bool = False
-    ) -> None:
+    def __init__(self, var_type: Type, hidden: bool = False, required: bool = False) -> None:
         """Init class."""
         self.v_type = var_type
         self.hide = hidden

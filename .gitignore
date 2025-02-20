@@ -92,3 +92,9 @@ ENV/
 # IDEs and OSs
 .vscode
 .DS_Store
+
+cov.xml
+
+.venv
+.ruff_cache
+.mypy_cache

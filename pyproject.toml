@@ -1,8 +1,58 @@
 
-[tool.black]
-line-length = 88
-target-version = ['py36', 'py37', 'py38']
-include = '\.pyi?$'
+[project]
+name = "aiohttp_msal"
+version = "0.7.2"
+description = "Helper Library to use the Microsoft Authentication Library (MSAL) with aiohttp"
+keywords = ["msal", "oauth", "aiohttp", "asyncio"]
+readme = "README.md"
+authors = [
+    {name = "Johann Kellerman", email = "kellerza@gmail.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "aiohttp>=3.8",
+    "aiohttp_session>=2.12",
+    "msal>=1.31.1",
+]
+license = {text = "MIT"}
+
+[project.urls]
+Homepage = "https://github.com/kellerza/aiohttp_msal"
+
+[project.optional-dependencies]
+redis = [  # keep for backward compatibility
+    "aiohttp_session[aioredis]>=2.12",
+]
+aioredis = [
+    "aiohttp_session[aioredis]>=2.12",
+]
+tests = [
+    "flake8",
+    "mypy",
+    "pylint==3.3.4",
+    "types-redis",
+    "pytest",
+    "pytest-aiohttp",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pytest-env",
+]
+
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+# requires = ["uv-build"] # >=0.5.15,<0.6
+# build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 121
@@ -55,6 +105,8 @@ norecursedirs = [".git", "modules"]
 log_cli = true
 log_cli_level = "DEBUG"
 asyncio_mode = "auto"
+addopts = "--cov=aiohttp_msal --cov-report xml:cov.xml"
+
 env = [
     "X_SP_APP_PW=p1",
     "X_SP_APP_ID=i1",
@@ -63,3 +115,4 @@ env = [
     "SP_APP_ID=i2",
     "SP_AUTHORITY=a2",
 ]
+
