@@ -28,10 +28,10 @@ class MSALSettings(SettingsBase):
     "https://login.microsoftonline.com/common"  # For multi-tenant app
     "https://login.microsoftonline.com/Tenant_Name_or_UUID_Here"."""
 
-    DOMAIN = "mydomain.com"
+    DOMAIN: str = "mydomain.com"
     """Your domain. Used by routes & Redis functions."""
 
-    COOKIE_NAME = "AIOHTTP_SESSION"
+    COOKIE_NAME: str = "AIOHTTP_SESSION"
     """The name of the cookie with the session identifier."""
 
     login_callback: list[t.Callable[[t.Any], t.Awaitable[t.Any]]] = []
@@ -39,7 +39,7 @@ class MSALSettings(SettingsBase):
     info: dict[str, t.Callable[[t.Any], t.Any | t.Awaitable[t.Any]]] = {}
     """List of attributes to return in /user/info."""
 
-    REDIS = "redis://redis1:6379"
+    REDIS: str = "redis://redis1:6379"
     """OPTIONAL: Redis database connection used by app_init_redis_session()."""
     database: Redis = None  # type: ignore
     """Store the Redis connection when using app_init_redis_session()."""

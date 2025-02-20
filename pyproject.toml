@@ -1,7 +1,7 @@
 
 [project]
 name = "aiohttp_msal"
-version = "0.8.0"
+version = "0.8.1"
 description = "Helper Library to use the Microsoft Authentication Library (MSAL) with aiohttp"
 keywords = ["msal", "oauth", "aiohttp", "asyncio"]
 readme = "README.md"
@@ -34,7 +34,6 @@ redis = [ # keep for backward compatibility
 ]
 aioredis = ["aiohttp_session[aioredis]>=2.12"]
 tests = [
-    "flake8",
     "mypy",
     "pylint==3.3.4",
     "types-redis",

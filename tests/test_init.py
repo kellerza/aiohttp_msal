@@ -6,50 +6,61 @@ import pytest
 
 import aiohttp_msal.routes  # noqa
 from aiohttp_msal import auth_ok, msal_session
+from aiohttp_msal.msal_async import AsyncMSAL
 
 
-def a_yes(ses):
+def a_yes(ses: AsyncMSAL) -> bool:
     return True
 
 
-def a_no(ses):
+def a_no(ses: AsyncMSAL) -> bool:
     return False
 
 
 @msal_session(a_yes, a_yes)
-async def t_2yes(request, ses):
+async def t_2yes(request: dict, ses: AsyncMSAL) -> bool:
     return True
 
 
 @msal_session(a_no, a_yes, at_least_one=True)
-async def t_1no1yes_one(request, ses):
+async def t_1no1yes_ok(request: dict, ses: AsyncMSAL) -> bool:
+    return True
+
+
+@msal_session(a_no, a_yes, at_least_one=False)
+async def t_1no1yes_nok(request: dict, ses: AsyncMSAL) -> bool:
     return True
 
 
 @msal_session(a_no, a_no, at_least_one=True)
-async def t_2no_one(request, ses):
+async def t_2no_nok(request: dict, ses: AsyncMSAL) -> bool:
+    return True
+
+
+@msal_session(a_no, a_no, at_least_one=False)
+async def t_2noa_nok(request: dict, ses: AsyncMSAL) -> bool:
     return True
 
 
 @patch("aiohttp_msal.get_session")
-async def test_include_any(get_session: MagicMock):
+async def test_include_any(get_session: MagicMock) -> None:
     get_session.return_value = {}
 
-    assert await t_2yes({})
+    for func in [t_2yes, t_1no1yes_ok]:
+        assert await func({}) is True
 
-    with pytest.raises(Exception):
-        await t_1no1yes_one
+    for func in [t_1no1yes_nok, t_2no_nok, t_2noa_nok]:
+        with pytest.raises(Exception) as err:
+            assert await func({}) is True
+        assert "Forbidden" in str(err)
 
-    with pytest.raises(Exception):
-        await t_2no_one
 
-
-async def func(request, ses):
+async def func(request: dict, ses: AsyncMSAL) -> bool:
     return True
 
 
 @patch("aiohttp_msal.get_session")
-async def test_msal_session_auth(get_session: MagicMock):
+async def test_msal_session_auth(get_session: MagicMock) -> None:
     get_session.return_value = {}
 
     assert await msal_session(a_yes, a_yes)(func)({})
@@ -68,7 +79,7 @@ async def test_msal_session_auth(get_session: MagicMock):
 
 
 @patch("aiohttp_msal.get_session")
-async def test_auth_ok(get_session: MagicMock):
+async def test_auth_ok(get_session: MagicMock) -> None:
     get_session.return_value = {"mail": "yes!"}
 
     assert await msal_session(a_yes)(func)({})

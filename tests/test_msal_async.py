@@ -3,7 +3,8 @@
 from aiohttp_msal.msal_async import AsyncMSAL, Session
 
 
-def test_ses():
+def test_ses() -> None:
+    """Test session."""
     session = Session(None, new=True, data={"session": {"mail": "j@k", "name": "j"}})
     ses = AsyncMSAL(session)
     assert str(ses.name) == "j"

@@ -41,8 +41,7 @@ def msal_session(
                     if _ok:
                         return await func(*args, ses)
                     continue
-
-                if not _ok:
+                elif not _ok:
                     raise web.HTTPForbidden
 
             if at_least_one:

@@ -34,9 +34,9 @@ def redis() -> Redis:
 @pytest.mark.asyncio
 async def test_session_iter_fail(redis: Redis) -> None:
     """Test session iter."""
-    match = {"a": 1}
+    match1 = {"a": 1}
     with pytest.raises(ValueError):
-        async for _ in session_iter(redis, match=match, key_match="a*"):
+        async for _ in session_iter(redis, match=match1, key_match="a*"):  # type:ignore
             pass
 
     match = {"a": "1"}
@@ -55,6 +55,6 @@ async def test_session_iter(redis: Redis) -> None:
         assert created in (1, 2)
         assert key in ("a", "b")
 
-    assert redis.scan_iter.call_args[1]["match"] == "a*"
-    assert redis.scan_iter.call_args[1]["count"] == 100
-    assert redis.scan_iter.call_args_list == [call(count=100, match="a*")]
+    assert redis.scan_iter.call_args[1]["match"] == "a*"  # type:ignore
+    assert redis.scan_iter.call_args[1]["count"] == 100  # type:ignore
+    assert redis.scan_iter.call_args_list == [call(count=100, match="a*")]  # type:ignore

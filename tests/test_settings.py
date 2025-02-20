@@ -19,6 +19,9 @@ def test_load() -> None:
 
     ENV.load("Y_")
     assert ENV.to_dict() == {
+        "Y_COOKIE_NAME": "AIOHTTP_SESSION",
+        "Y_DOMAIN": "mydomain.com",
+        "Y_REDIS": "redis://redis1:6379",
         "Y_SP_APP_ID": "i2",
         # "Y_SP_APP_PW": "p2", # hidden!
         "Y_SP_AUTHORITY": "a2",
@@ -36,7 +39,7 @@ def test_types() -> None:
     """Types."""
     res = Sett()
 
-    assert len(res._get_env()) == 3
+    assert len(res._get_fields()) == 3
 
     res.load("A_")
     assert res.NUM == 5

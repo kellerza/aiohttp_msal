@@ -32,23 +32,20 @@ class SettingsBase:
 
     _env_prefix: str = attrs.field(init=False, default="")
 
-    def _get_env(self) -> list[tuple[attrs.Attribute, str | None]]:
+    def _get_fields(self) -> dict[str, attrs.Attribute]:
         """Get env."""
-        env = [
-            a
-            for a in t.cast(tuple[attrs.Attribute, ...], attrs.fields(self.__class__))
-            if a.name.isupper() and not a.name.startswith("_")
-        ]
-        return [(a, os.getenv(f"{self._env_prefix}{a.name}")) for a in env]
+        fields: tuple[attrs.Attribute, ...] = attrs.fields(self.__class__)
+        return {f"{self._env_prefix}{a.name}": a for a in fields if a.name.isupper()}
 
     def load(self, environment_prefix: str = "") -> None:
         """Initialize."""
         logger = logging.getLogger(__name__)
         self._env_prefix = environment_prefix.upper()
-        for atr, newv in self._get_env():
+        for ename, atr in self._get_fields().items():
+            newv = os.getenv(ename)
             if newv is None:
                 if atr.metadata.get(KEY_REQ):
-                    raise ValueError(f"Required value missing: {self._env_prefix}{atr.name}")
+                    raise ValueError(f"Required value missing: {ename}")
                 continue
             if newv.startswith('"') and newv.endswith('"'):
                 newv = newv.strip('"')
@@ -79,9 +76,16 @@ class SettingsBase:
     def to_dict(self, as_string: bool = False) -> dict[str, t.Any]:
         """Get all variables."""
         res = {}
-        for atr, _ in self._get_env():
+        for ename, atr in self._get_fields().items():
             curv = getattr(self, atr.name)
             if atr.metadata.get(KEY_HIDE):
                 continue
-            res[self._env_prefix + atr.name] = str(curv) if as_string else curv
+            res[ename] = str(curv) if as_string else curv
         return res
+
+    def __attrs_post_init__(self) -> None:
+        """Ensure the class is ok."""
+        afields = [a.name for a in self._get_fields().values()]
+        fields = [f for f in dir(self) if f.isupper() and f not in afields]
+        if fields:
+            raise AssertionError(f"There are UPPERCASE fields without a type!: {fields}")
