@@ -89,6 +89,23 @@ async def session_clean(redis: Redis, *, max_age: int = 90, expected_keys: Optio
             _LOGGER.debug("No sessions removed (%s total)", keep)
 
 
+async def invalid_sessions(redis: Redis) -> None:
+    """Find & clean invalid sessions."""
+    async for key in redis.scan_iter(count=100, match=f"{MENV.COOKIE_NAME}*"):
+        if not isinstance(key, str):
+            key = key.decode()
+        sval = await redis.get(key)
+        if sval is None:
+            continue
+        try:
+            val: dict = json.loads(sval)
+            assert isinstance(val["created"], int)
+            assert isinstance(val["session"], dict)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.warning("Removing session %s: %s", key, err)
+            await redis.delete(key)
+
+
 def _session_factory(key: str, created: str, session: dict) -> AsyncMSAL:
     """Create a AsyncMSAL session.
 

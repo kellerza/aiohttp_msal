@@ -1,13 +1,11 @@
 
 [project]
 name = "aiohttp_msal"
-version = "0.7.2"
+version = "0.8.0"
 description = "Helper Library to use the Microsoft Authentication Library (MSAL) with aiohttp"
 keywords = ["msal", "oauth", "aiohttp", "asyncio"]
 readme = "README.md"
-authors = [
-    {name = "Johann Kellerman", email = "kellerza@gmail.com"},
-]
+authors = [{ name = "Johann Kellerman", email = "kellerza@gmail.com" }]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -20,22 +18,21 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
+    "attrs>25",
     "aiohttp>=3.8",
     "aiohttp_session>=2.12",
     "msal>=1.31.1",
 ]
-license = {text = "MIT"}
+license = { text = "MIT" }
 
 [project.urls]
 Homepage = "https://github.com/kellerza/aiohttp_msal"
 
 [project.optional-dependencies]
-redis = [  # keep for backward compatibility
+redis = [ # keep for backward compatibility
     "aiohttp_session[aioredis]>=2.12",
 ]
-aioredis = [
-    "aiohttp_session[aioredis]>=2.12",
-]
+aioredis = ["aiohttp_session[aioredis]>=2.12"]
 tests = [
     "flake8",
     "mypy",
@@ -114,8 +111,15 @@ env = [
     "X_SP_APP_PW=p1",
     "X_SP_APP_ID=i1",
     "X_SP_AUTHORITY=a1",
-    "SP_APP_PW=p2",
-    "SP_APP_ID=i2",
-    "SP_AUTHORITY=a2",
-]
 
+    "Y_SP_APP_PW=p2",
+    "Y_SP_APP_ID=i2",
+    "Y_SP_AUTHORITY=a2",
+
+    "A_NUM=5",
+    "A_BOOL=True",
+
+    "B_NUM=10",
+    "B_BOOL=False",
+    "B_ROOT=/c/",
+]

@@ -1,23 +1,26 @@
 """Settings."""
 
-from typing import TYPE_CHECKING, Any, Awaitable, Callable
+import typing as t
 
-from aiohttp_msal.settings_base import SettingsBase, Var
+import attrs
 
-if TYPE_CHECKING:
+from aiohttp_msal.settings_base import VAR_REQ, VAR_REQ_HIDE, SettingsBase
+
+if t.TYPE_CHECKING:
     from redis.asyncio import Redis
 else:
-    Redis = Any
+    Redis = None
 
 
+@attrs.define
 class MSALSettings(SettingsBase):
     """Settings."""
 
-    SP_APP_ID = Var(str, required=True)
+    SP_APP_ID: str = attrs.field(metadata=VAR_REQ, default="")
     """SharePoint Application ID."""
-    SP_APP_PW = Var(str, required=True)
+    SP_APP_PW: str = attrs.field(metadata=VAR_REQ_HIDE, default="")
     """SharePoint Application Secret."""
-    SP_AUTHORITY = Var(str, required=True)
+    SP_AUTHORITY: str = attrs.field(metadata=VAR_REQ, default="")
     """SharePoint Authority URL.
 
     Examples:
@@ -30,9 +33,9 @@ class MSALSettings(SettingsBase):
     COOKIE_NAME = "AIOHTTP_SESSION"
     """The name of the cookie with the session identifier."""
 
-    login_callback: list[Callable[[Any], Awaitable[Any]]] = []
+    login_callback: list[t.Callable[[t.Any], t.Awaitable[t.Any]]] = []
     """A list of callbacks to execute on successful login."""
-    info: dict[str, Callable[[Any], Any | Awaitable[Any]]] = {}
+    info: dict[str, t.Callable[[t.Any], t.Any | t.Awaitable[t.Any]]] = {}
     """List of attributes to return in /user/info."""
 
     REDIS = "redis://redis1:6379"

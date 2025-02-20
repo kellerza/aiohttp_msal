@@ -1,27 +1,25 @@
 """Settings Base."""
 
-from __future__ import annotations
 import logging
 import os
+import typing as t
 from pathlib import Path
-from typing import Any, Type
+
+import attrs
+
+KEY_REQ = "required"
+KEY_HIDE = "hide"
+VAR_REQ_HIDE = {KEY_REQ: True, KEY_HIDE: True}
+VAR_REQ = {KEY_REQ: True}
+VAR_HIDE = {KEY_HIDE: True}
 
 
-class Var:  # pylint: disable=too-few-public-methods
-    """Variable settings."""
-
-    @staticmethod
-    def from_value(val: Any) -> Var:
-        """Ensure the return is an instance of Var."""
-        return val if isinstance(val, Var) else Var(type(val))
-
-    def __init__(self, var_type: Type, hidden: bool = False, required: bool = False) -> None:
-        """Init class."""
-        self.v_type = var_type
-        self.hide = hidden
-        self.required = required
+def _is_hidden(atr: attrs.Attribute) -> bool:
+    """Is this field hidden."""
+    return bool(atr.metadata.get(KEY_HIDE))
 
 
+@attrs.define
 class SettingsBase:
     """Retrieve Settings from environment variables.
 
@@ -32,50 +30,58 @@ class SettingsBase:
     convert environment variables to match the type of the value here.
     """
 
-    _vars: dict[str, Var] = {}
-    _env_prefix = ""
+    _env_prefix: str = attrs.field(init=False, default="")
+
+    def _get_env(self) -> list[tuple[attrs.Attribute, str | None]]:
+        """Get env."""
+        env = [
+            a
+            for a in t.cast(tuple[attrs.Attribute, ...], attrs.fields(self.__class__))
+            if a.name.isupper() and not a.name.startswith("_")
+        ]
+        return [(a, os.getenv(f"{self._env_prefix}{a.name}")) for a in env]
 
     def load(self, environment_prefix: str = "") -> None:
         """Initialize."""
-        self._env_prefix = environment_prefix
         logger = logging.getLogger(__name__)
-        attrs = [a for a in dir(self) if not a.startswith("_") and a.upper() == a]
-        for name in attrs:
-            curv = getattr(self, name)
-            newv: Any = os.getenv(environment_prefix + name.upper())
-            if isinstance(curv, Var):
-                self._vars[name] = curv
-            info = self._vars.get(name) or Var(type(curv))
-            if not newv:
-                if info.required:
-                    raise ValueError(f"Required value for {name} not provided")
+        self._env_prefix = environment_prefix.upper()
+        for atr, newv in self._get_env():
+            if newv is None:
+                if atr.metadata.get(KEY_REQ):
+                    raise ValueError(f"Required value missing: {self._env_prefix}{atr.name}")
                 continue
             if newv.startswith('"') and newv.endswith('"'):
                 newv = newv.strip('"')
-            logger.debug("ENV %s = %s", name, "***" if info.hide else newv)
 
-            if issubclass(info.v_type, bool):
-                newv = newv.upper() in ("1", "TRUE")
-            elif issubclass(info.v_type, int):
-                newv = int(newv)
-            elif issubclass(info.v_type, Path):
-                newv = Path(newv)
-            elif issubclass(info.v_type, bytes):
-                newv = newv.encode()
+            curv = getattr(self, atr.name)
+            v_type = atr.type or type(curv)
 
-            if name.endswith("_URI") and not newv.endswith("/"):
-                newv += "/"
-            setattr(self, name, newv)
+            if issubclass(v_type, bool):
+                setattr(self, atr.name, newv.upper() in ("1", "TRUE"))
+            elif issubclass(v_type, int):
+                setattr(self, atr.name, int(newv))
+            elif issubclass(v_type, Path):
+                setattr(self, atr.name, Path(newv))
+            elif issubclass(v_type, bytes):
+                setattr(self, atr.name, newv.encode())
+            else:
+                if atr.name.endswith("_URI") and not newv.endswith("/"):
+                    newv += "/"
+                setattr(self, atr.name, newv)
 
-    def to_dict(self, as_string: bool = False) -> dict[str, Any]:
+            logger.debug(
+                "ENV %s%s = %s",
+                self._env_prefix,
+                atr.name,
+                "***" if atr.metadata.get(KEY_HIDE) else getattr(self, atr.name),
+            )
+
+    def to_dict(self, as_string: bool = False) -> dict[str, t.Any]:
         """Get all variables."""
         res = {}
-        for name in vars(self):
-            if name.startswith("_") or name.upper() != name:
+        for atr, _ in self._get_env():
+            curv = getattr(self, atr.name)
+            if atr.metadata.get(KEY_HIDE):
                 continue
-            curv = getattr(self, name)
-            info = self._vars.get(name) or Var(type(curv))
-            if info.hide:
-                continue
-            res[self._env_prefix + name] = str(curv) if as_string else curv
+            res[self._env_prefix + atr.name] = str(curv) if as_string else curv
         return res
