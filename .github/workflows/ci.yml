@@ -32,7 +32,7 @@ jobs:
           version: "0.6.2"
 
       - name: Install Requirements
-        run: uv pip install .[aioredis,tests]
+        run: uv pip install --system .[aioredis,tests]
 
       - name: Run Pylint
         run: pylint aiohttp_msal
@@ -53,7 +53,7 @@ jobs:
           version: "0.6.2"
 
       - name: Install Requirements
-        run: uv pip install .[aioredis,tests]
+        run: uv pip install --system .[aioredis,tests]
 
       - name: Run mypy
         run: mypy --non-interactive aiohttp_msal/
@@ -84,7 +84,7 @@ jobs:
           version: "0.6.2"
 
       - name: Install Requirements
-        run: uv pip install .[aioredis,tests]
+        run: uv pip install --system .[aioredis,tests]
 
       - name: Run tests and generate coverage report
         run: pytest
