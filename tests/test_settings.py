@@ -18,7 +18,7 @@ def test_load() -> None:
     assert ENV.SP_APP_PW == "p1"
 
     ENV.load("Y_")
-    assert ENV.to_dict() == {
+    assert ENV.asdict() == {
         "Y_COOKIE_NAME": "AIOHTTP_SESSION",
         "Y_DOMAIN": "mydomain.com",
         "Y_REDIS": "redis://redis1:6379",

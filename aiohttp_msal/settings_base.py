@@ -34,8 +34,15 @@ class SettingsBase:
 
     def _get_fields(self) -> dict[str, attrs.Attribute]:
         """Get env."""
-        fields: tuple[attrs.Attribute, ...] = attrs.fields(self.__class__)
-        return {f"{self._env_prefix}{a.name}": a for a in fields if a.name.isupper()}
+        res: list[attrs.Attribute] = [a for a in attrs.fields(self.__class__) if a.name.isupper()]
+
+        dirs = [f for f in dir(self) if f.isupper()]
+        if len(dirs) != len(res):
+            for atr in res:
+                dirs.remove(atr.name)
+            raise AssertionError(f"There are UPPERCASE fields without a type!: {dirs}")
+
+        return {f"{self._env_prefix}{a.name}": a for a in res}
 
     def load(self, environment_prefix: str = "") -> None:
         """Initialize."""
@@ -73,7 +80,7 @@ class SettingsBase:
                 "***" if atr.metadata.get(KEY_HIDE) else getattr(self, atr.name),
             )
 
-    def to_dict(self, as_string: bool = False) -> dict[str, t.Any]:
+    def asdict(self, as_string: bool = False) -> dict[str, t.Any]:
         """Get all variables."""
         res = {}
         for ename, atr in self._get_fields().items():
@@ -82,10 +89,3 @@ class SettingsBase:
                 continue
             res[ename] = str(curv) if as_string else curv
         return res
-
-    def __attrs_post_init__(self) -> None:
-        """Ensure the class is ok."""
-        afields = [a.name for a in self._get_fields().values()]
-        fields = [f for f in dir(self) if f.isupper() and f not in afields]
-        if fields:
-            raise AssertionError(f"There are UPPERCASE fields without a type!: {fields}")

@@ -1,7 +1,7 @@
 
 [project]
 name = "aiohttp_msal"
-version = "0.8.1"
+version = "0.8.2"
 description = "Helper Library to use the Microsoft Authentication Library (MSAL) with aiohttp"
 keywords = ["msal", "oauth", "aiohttp", "asyncio"]
 readme = "README.md"
