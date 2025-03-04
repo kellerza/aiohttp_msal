@@ -106,7 +106,7 @@ async def invalid_sessions(redis: Redis) -> None:
             await redis.delete(key)
 
 
-def _session_factory(key: str, created: str, session: dict) -> AsyncMSAL:
+def _session_factory(key: str, created: int, session: dict) -> AsyncMSAL:
     """Create a AsyncMSAL session.
 
     When get_token refreshes the token retrieved from Redis, the save_cache callback
@@ -124,7 +124,7 @@ def _session_factory(key: str, created: str, session: dict) -> AsyncMSAL:
         except RuntimeError:
             asyncio.run(async_save_cache(*args))
 
-    return AsyncMSAL(session, save_cache=save_cache)
+    return AsyncMSAL(session, save_callback=save_cache)
 
 
 async def get_session(email: str, *, redis: Optional[Redis] = None, scope: str = "") -> AsyncMSAL:
@@ -137,7 +137,7 @@ async def get_session(email: str, *, redis: Optional[Redis] = None, scope: str =
             cnt += 1
             if scope and scope not in str(session.get("token_cache")).lower():
                 continue
-            return _session_factory(key, str(created), session)
+            return _session_factory(key, created, session)
     msg = f"Session for {email}"
     if not scope:
         raise ValueError(f"{msg} not found")

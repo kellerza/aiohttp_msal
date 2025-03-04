@@ -7,16 +7,17 @@ Once you have the OAuth tokens store in the session, you are free to make reques
 
 import asyncio
 import json
-from functools import partial, wraps
-from typing import Any, Callable, Literal
+from functools import partial, partialmethod, wraps
+from typing import Any, Callable, ClassVar, Literal, Unpack
 
 from aiohttp import web
-from aiohttp.client import ClientResponse, ClientSession, _RequestContextManager
+from aiohttp.client import ClientResponse, ClientSession, StrOrURL, _RequestContextManager, _RequestOptions
 from aiohttp_session import Session
 from msal import ConfidentialClientApplication, SerializableTokenCache
 
 from aiohttp_msal.settings import ENV
 
+HttpMethods = Literal["get", "post", "put", "patch", "delete"]
 HTTP_GET = "get"
 HTTP_POST = "post"
 HTTP_PUT = "put"
@@ -64,21 +65,20 @@ class AsyncMSAL:
 
     _token_cache: SerializableTokenCache = None
     _app: ConfidentialClientApplication = None
-    _clientsession: ClientSession = None  # type: ignore
+    client_session: ClassVar[ClientSession | None] = None
 
     def __init__(
         self,
-        session: Session | dict[str, str],
-        save_cache: Callable[[Session | dict[str, str]], None] | None = None,
+        session: Session | dict[str, Any],
+        save_callback: Callable[[Session | dict[str, Any]], None] | None = None,
     ):
         """Init the class.
 
-        **save_token_cache** will be called if the token cache changes. Optional.
+        **save_callback** will be called if the token cache changes. Optional.
           Not required when the session parameter is an aiohttp_session.Session.
         """
         self.session = session
-        if save_cache:
-            self.save_token_cache = save_cache
+        self.save_callback = save_callback
         if not isinstance(session, (Session, dict)):
             raise ValueError(f"session or dict-like object required {session}")
 
@@ -110,12 +110,12 @@ class AsyncMSAL:
             )
         return self._app
 
-    def _save_token_cache(self) -> None:
+    def save_token_cache(self) -> None:
         """Save the token cache if it changed."""
         if self.token_cache.has_state_changed:
             self.session[TOKEN_CACHE] = self.token_cache.serialize()
-            if hasattr(self, "save_token_cache"):
-                self.save_token_cache(self.token_cache)
+            if self.save_callback:
+                self.save_callback(self.session)
 
     def build_auth_code_flow(
         self,
@@ -149,7 +149,7 @@ class AsyncMSAL:
             raise web.HTTPBadRequest(text=str(result["error"]))
         if "id_token_claims" not in result:
             raise web.HTTPBadRequest(text=f"Expected id_token_claims in {result}")
-        self._save_token_cache()
+        self.save_token_cache()
         self.session[USER_EMAIL] = result.get("id_token_claims").get("preferred_username")
 
     async def async_acquire_token_by_auth_code_flow(self, auth_response: Any) -> None:
@@ -161,7 +161,7 @@ class AsyncMSAL:
         accounts = self.app.get_accounts()
         if accounts:
             result = self.app.acquire_token_silent(scopes=scopes or DEFAULT_SCOPES, account=accounts[0])
-            self._save_token_cache()
+            self.save_token_cache()
             return result
         return None
 
@@ -169,7 +169,7 @@ class AsyncMSAL:
         """Acquire a token based on username."""
         return await asyncio.get_event_loop().run_in_executor(None, self.get_token)
 
-    async def request(self, method: str, url: str, **kwargs: Any) -> ClientResponse:
+    async def request(self, method: HttpMethods, url: StrOrURL, **kwargs: Unpack[_RequestOptions]) -> ClientResponse:
         """Make a request to url using an oauth session.
 
         :param str url: url to send request to
@@ -178,8 +178,6 @@ class AsyncMSAL:
         :return: Response of the request
         :rtype: aiohttp.Response
         """
-        if not self._clientsession:
-            AsyncMSAL._clientsession = ClientSession(trust_env=True)
 
         token = await self.async_get_token()
         if token is None:
@@ -187,7 +185,8 @@ class AsyncMSAL:
 
         kwargs = kwargs.copy()
         # Ensure headers exist & make a copy
-        kwargs["headers"] = headers = dict(kwargs.get("headers", {}))
+        headers: dict[str, str] = dict(kwargs.get("headers") or {})  # type:ignore
+        kwargs["headers"] = headers
 
         headers["Authorization"] = "Bearer " + token["access_token"]
 
@@ -201,17 +200,27 @@ class AsyncMSAL:
             if "data" in kwargs:
                 kwargs["data"] = json.dumps(kwargs["data"])  # auto convert to json
 
-        response = await self._clientsession.request(method, url, **kwargs)
+        if not AsyncMSAL.client_session:
+            AsyncMSAL.client_session = ClientSession(trust_env=True)
 
-        return response
+        return await AsyncMSAL.client_session.request(method, url, **kwargs)
 
-    def get(self, url: str, **kwargs: Any):  # type:ignore
-        """GET Request."""
-        return _RequestContextManager(self.request(HTTP_GET, url, **kwargs))
+    def request_ctx(
+        self, method: HttpMethods, url: StrOrURL, **kwargs: Unpack[_RequestOptions]
+    ) -> _RequestContextManager:
+        """Request context manager."""
+        return _RequestContextManager(self.request(method, url, **kwargs))
 
-    def post(self, url: str, **kwargs: Any):  # type:ignore
-        """POST request."""
-        return _RequestContextManager(self.request(HTTP_POST, url, **kwargs))
+    get = partialmethod(request_ctx, HTTP_GET)
+    post = partialmethod(request_ctx, HTTP_POST)
+
+    # def get(self, url: str, **kwargs: Any) -> _RequestContextManager:
+    #     """GET Request."""
+    #     return _RequestContextManager(self.request(HTTP_GET, url, **kwargs))
+
+    # def post(self, url: str, **kwargs: Any) -> _RequestContextManager:
+    #     """POST request."""
+    #     return _RequestContextManager(self.request(HTTP_POST, url, **kwargs))
 
     @property
     def mail(self) -> str:
