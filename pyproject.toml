@@ -35,7 +35,7 @@ redis = [ # keep for backward compatibility
 aioredis = ["aiohttp_session[aioredis]>=2.12"]
 tests = [
     "mypy",
-    "pylint==3.3.4",
+    "pylint==3.3.6",
     "types-redis",
     "pytest",
     "pytest-aiohttp",
