@@ -34,7 +34,7 @@ aioredis = ["aiohttp_session[aioredis]>=2.12.1,<3"]
 [dependency-groups]
 dev = [
     "mypy",
-    "pylint==3.3.7",
+    "pylint==3.3.8",
     "types-redis",
     "pytest",
     "pytest-aiohttp",
