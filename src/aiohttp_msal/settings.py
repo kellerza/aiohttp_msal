@@ -1,13 +1,13 @@
 """Settings."""
 
-# pylint:disable=invalid-name
-import typing as t
+from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING, Any
 
 import attrs
 
 from aiohttp_msal.settings_base import VAR_REQ, VAR_REQ_HIDE, SettingsBase
 
-if t.TYPE_CHECKING:
+if TYPE_CHECKING:
     from redis.asyncio import Redis
 else:
     Redis = None
@@ -34,13 +34,9 @@ class MSALSettings(SettingsBase):
     COOKIE_NAME: str = "AIOHTTP_SESSION"
     """The name of the cookie with the session identifier."""
 
-    login_callback: list[t.Callable[[t.Any], t.Awaitable[t.Any]]] = attrs.field(
-        factory=list
-    )
+    login_callback: list[Callable[[Any], Awaitable[Any]]] = attrs.field(factory=list)
     """A list of callbacks to execute on successful login."""
-    info: dict[str, t.Callable[[t.Any], t.Any | t.Awaitable[t.Any]]] = attrs.field(
-        factory=dict
-    )
+    info: dict[str, Callable[[Any], Any | Awaitable[Any]]] = attrs.field(factory=dict)
     """List of attributes to return in /user/info."""
 
     REDIS: str = "redis://redis1:6379"

@@ -83,7 +83,7 @@ async def user_authorized(request: web.Request) -> web.Response:
     if not msg:
         try:
             await aiomsal.async_acquire_token_by_auth_code_flow(auth_response)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             msg.append(
                 "<b>Could not get token</b> - async_acquire_token_by_auth_code_flow"
             )
@@ -95,7 +95,7 @@ async def user_authorized(request: web.Request) -> web.Response:
         try:
             await get_user_info(aiomsal)
             await get_manager_info(aiomsal)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             msg.append("Could not get org info from MS graph")
             msg.append(str(err))
         if session.get("mail"):

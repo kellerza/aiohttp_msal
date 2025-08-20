@@ -106,7 +106,7 @@ async def invalid_sessions(redis: Redis) -> None:
             val: dict = json.loads(sval)
             assert isinstance(val["created"], int)
             assert isinstance(val["session"], dict)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             _LOGGER.warning("Removing session %s: %s", key, err)
             await redis.delete(key)
 

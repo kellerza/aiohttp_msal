@@ -1,9 +1,10 @@
 """aiohttp_msal."""
 
 import logging
-import typing as t
+from collections.abc import Awaitable, Callable
 from functools import wraps
 from inspect import getfullargspec, iscoroutinefunction
+from typing import TypeVar, TypeVarTuple, cast
 
 from aiohttp import ClientSession, web
 from aiohttp_session import get_session
@@ -14,15 +15,15 @@ from aiohttp_msal.settings import ENV
 
 _LOGGER = logging.getLogger(__name__)
 
-_T = t.TypeVar("_T")
-Ts = t.TypeVarTuple("Ts")
+_T = TypeVar("_T")
+Ts = TypeVarTuple("Ts")
 
 
 def msal_session(
-    *callbacks: t.Callable[[AsyncMSAL], bool | t.Awaitable[bool]],
+    *callbacks: Callable[[AsyncMSAL], bool | Awaitable[bool]],
     at_least_one: bool | None = False,
-) -> t.Callable[
-    [t.Callable[[*Ts, AsyncMSAL], t.Awaitable[_T]]], t.Callable[[*Ts], t.Awaitable[_T]]
+) -> Callable[
+    [Callable[[*Ts, AsyncMSAL], Awaitable[_T]]], Callable[[*Ts], Awaitable[_T]]
 ]:
     """Session decorator.
 
@@ -30,13 +31,13 @@ def msal_session(
     """
 
     def check_session(
-        func: t.Callable[[*Ts, AsyncMSAL], t.Awaitable[_T]],
-    ) -> t.Callable[[*Ts], t.Awaitable[_T]]:
+        func: Callable[[*Ts, AsyncMSAL], Awaitable[_T]],
+    ) -> Callable[[*Ts], Awaitable[_T]]:
         @wraps(func)
         async def wrapper(*args: *Ts) -> _T:
             if len(args) < 1:
                 raise AssertionError("Requires a Request as the first parameter")
-            request = t.cast(web.Request, args[0])
+            request = cast(web.Request, args[0])
             ses = AsyncMSAL(session=await get_session(request))
             for c_b in callbacks:
                 _ok = await c_b(ses) if iscoroutinefunction(c_b) else c_b(ses)
@@ -65,8 +66,8 @@ def auth_ok(ses: AsyncMSAL) -> bool:
 
 
 def auth_or(
-    *args: t.Callable[[AsyncMSAL], bool | t.Awaitable[bool]],
-) -> t.Callable[[AsyncMSAL], t.Awaitable[bool]]:
+    *args: Callable[[AsyncMSAL], bool | Awaitable[bool]],
+) -> Callable[[AsyncMSAL], Awaitable[bool]]:
     """Ensure either of the methods is valid. An alternative to at_least_one=True.
 
     Arguments can include a list of function to perform login tests etc.
@@ -92,7 +93,6 @@ async def app_init_redis_session(
 
     You can initialize your own aiohttp_session & storage provider.
     """
-    # pylint: disable=import-outside-toplevel
     from aiohttp_session import redis_storage
     from redis.asyncio import from_url
 
@@ -100,7 +100,7 @@ async def app_init_redis_session(
 
     _LOGGER.info("Connect to Redis %s", ENV.REDIS)
     try:
-        ENV.database = from_url(ENV.REDIS)  # pylint: disable=no-member
+        ENV.database = from_url(ENV.REDIS)
         # , encoding="utf-8", decode_responses=True
     except ConnectionRefusedError as err:
         raise ConnectionError("Could not connect to REDIS server") from err
@@ -126,7 +126,7 @@ async def check_proxy() -> None:
                 if resp.ok:
                     return
                 raise ConnectionError(await resp.text())
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:
         raise ConnectionError(
             "No connection to the Internet. Required for OAuth. Check your Proxy?"
         ) from err

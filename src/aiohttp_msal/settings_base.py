@@ -2,8 +2,8 @@
 
 import logging
 import os
-import typing as t
 from pathlib import Path
+from typing import Any
 
 import attrs
 
@@ -34,7 +34,9 @@ class SettingsBase:
 
     def _get_fields(self) -> dict[str, attrs.Attribute]:
         """Get env."""
-        res: list[attrs.Attribute] = [a for a in attrs.fields(self.__class__) if a.name.isupper()]
+        res: list[attrs.Attribute] = [
+            a for a in attrs.fields(self.__class__) if a.name.isupper()
+        ]
 
         dirs = [f for f in dir(self) if f.isupper()]
         if len(dirs) != len(res):
@@ -80,7 +82,7 @@ class SettingsBase:
                 "***" if atr.metadata.get(KEY_HIDE) else getattr(self, atr.name),
             )
 
-    def asdict(self, as_string: bool = False) -> dict[str, t.Any]:
+    def asdict(self, as_string: bool = False) -> dict[str, Any]:
         """Get all variables."""
         res = {}
         for ename, atr in self._get_fields().items():
