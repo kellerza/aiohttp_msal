@@ -34,14 +34,18 @@ class MSALSettings(SettingsBase):
     COOKIE_NAME: str = "AIOHTTP_SESSION"
     """The name of the cookie with the session identifier."""
 
-    login_callback: list[t.Callable[[t.Any], t.Awaitable[t.Any]]] = []
+    login_callback: list[t.Callable[[t.Any], t.Awaitable[t.Any]]] = attrs.field(
+        factory=list
+    )
     """A list of callbacks to execute on successful login."""
-    info: dict[str, t.Callable[[t.Any], t.Any | t.Awaitable[t.Any]]] = {}
+    info: dict[str, t.Callable[[t.Any], t.Any | t.Awaitable[t.Any]]] = attrs.field(
+        factory=dict
+    )
     """List of attributes to return in /user/info."""
 
     REDIS: str = "redis://redis1:6379"
     """OPTIONAL: Redis database connection used by app_init_redis_session()."""
-    database: Redis = None  # type: ignore
+    database: Redis = None  # type: ignore[assignment]
     """Store the Redis connection when using app_init_redis_session()."""
 
 

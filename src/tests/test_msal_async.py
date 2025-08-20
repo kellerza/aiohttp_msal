@@ -1,7 +1,5 @@
 """Test the AsyncMSAL class."""
 
-# from unittest.mock import patch
-
 from aiohttp_msal.msal_async import AsyncMSAL, Session
 
 

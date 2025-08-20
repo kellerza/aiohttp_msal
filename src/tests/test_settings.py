@@ -30,9 +30,11 @@ def test_load() -> None:
 
 @attrs.define
 class Sett(SettingsBase):
+    """Set."""
+
     NUM: int = 0
     BOOL: bool = attrs.field(metadata=VAR_REQ, default=False)
-    ROOT: Path = Path(".")
+    ROOT: Path = Path()
 
 
 def test_types() -> None:
@@ -44,7 +46,7 @@ def test_types() -> None:
     res.load("A_")
     assert res.NUM == 5
     assert res.BOOL is True
-    assert res.ROOT == Path(".")
+    assert res.ROOT == Path()
 
     res.load("B_")
     assert res.NUM == 10

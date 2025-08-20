@@ -1,8 +1,9 @@
 """The user blueprint."""
 
 import time
+from collections.abc import Mapping, Sequence
 from inspect import iscoroutinefunction
-from typing import Any, Mapping, Sequence
+from typing import Any
 from urllib.parse import urljoin
 
 from aiohttp import web
@@ -62,7 +63,9 @@ async def user_authorized(request: web.Request) -> web.Response:
 
     # Ensure all expected variables were returned...
     if not all(auth_response.get(k) for k in ["code", "session_state", "state"]):
-        msg.append(f"<b>Expecting code,state,session_state in post body.</b>auth_response: {auth_response}")
+        msg.append(
+            f"<b>Expecting code,state,session_state in post body.</b>auth_response: {auth_response}"
+        )
 
     if not request.cookies.get(ENV.COOKIE_NAME):
         cookies = dict(request.cookies.items())
@@ -81,7 +84,9 @@ async def user_authorized(request: web.Request) -> web.Response:
         try:
             await aiomsal.async_acquire_token_by_auth_code_flow(auth_response)
         except Exception as err:  # pylint: disable=broad-except
-            msg.append("<b>Could not get token</b> - async_acquire_token_by_auth_code_flow")
+            msg.append(
+                "<b>Could not get token</b> - async_acquire_token_by_auth_code_flow"
+            )
             msg.append(str(err))
 
     if not msg:

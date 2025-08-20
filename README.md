@@ -104,3 +104,11 @@ def main()
     # ...
     # use the Graphclient
 ```
+
+## Development
+
+```bash
+uv sync --all-extras
+uv tool install ruff
+uv tool install codespell
+```

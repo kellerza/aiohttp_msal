@@ -4,8 +4,9 @@ import asyncio
 import json
 import logging
 import time
+from collections.abc import AsyncGenerator
 from contextlib import AsyncExitStack, asynccontextmanager
-from typing import Any, AsyncGenerator, Optional
+from typing import Any
 
 from redis.asyncio import Redis, from_url
 
@@ -30,15 +31,15 @@ async def get_redis() -> AsyncGenerator[Redis, None]:
     try:
         yield redis
     finally:
-        MENV.database = None  # type:ignore
+        MENV.database = None  # type:ignore[assignment]
         await redis.close()
 
 
 async def session_iter(
     redis: Redis,
     *,
-    match: Optional[dict[str, str]] = None,
-    key_match: Optional[str] = None,
+    match: dict[str, str] | None = None,
+    key_match: str | None = None,
 ) -> AsyncGenerator[tuple[str, int, dict[str, Any]], None]:
     """Iterate over the Redis keys to find a specific session.
 
@@ -47,16 +48,18 @@ async def session_iter(
     """
     if match and not all(isinstance(v, str) for v in match.values()):
         raise ValueError("match values must be strings")
-    async for key in redis.scan_iter(count=100, match=key_match or f"{MENV.COOKIE_NAME}*"):
+    async for key in redis.scan_iter(
+        count=100, match=key_match or f"{MENV.COOKIE_NAME}*"
+    ):
         if not isinstance(key, str):
             key = key.decode()
         sval = await redis.get(key)
         created, ses = 0, {}
         try:
-            val = json.loads(sval)  # type: ignore
+            val = json.loads(sval)  # type: ignore[arg-type]
             created = int(val["created"])
             ses = val["session"]
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             pass
         if match:
             # Ensure we match all the supplied terms
@@ -70,7 +73,9 @@ async def session_iter(
         yield key, created, ses
 
 
-async def session_clean(redis: Redis, *, max_age: int = 90, expected_keys: Optional[dict] = None) -> None:
+async def session_clean(
+    redis: Redis, *, max_age: int = 90, expected_keys: dict[str, Any] | None = None
+) -> None:
     """Clear session entries older than max_age days."""
     rem, keep = 0, 0
     expire = int(time.time() - max_age * 24 * 60 * 60)
@@ -110,7 +115,8 @@ def _session_factory(key: str, created: int, session: dict) -> AsyncMSAL:
     """Create a AsyncMSAL session.
 
     When get_token refreshes the token retrieved from Redis, the save_cache callback
-    will be responsible to update the cache in Redis."""
+    will be responsible to update the cache in Redis.
+    """
 
     async def async_save_cache(_: dict) -> None:
         """Save the token cache to Redis."""
@@ -127,7 +133,9 @@ def _session_factory(key: str, created: int, session: dict) -> AsyncMSAL:
     return AsyncMSAL(session, save_callback=save_cache)
 
 
-async def get_session(email: str, *, redis: Optional[Redis] = None, scope: str = "") -> AsyncMSAL:
+async def get_session(
+    email: str, *, redis: Redis | None = None, scope: str = ""
+) -> AsyncMSAL:
     """Get a session from Redis."""
     cnt = 0
     async with AsyncExitStack() as stack:
@@ -147,7 +155,7 @@ async def get_session(email: str, *, redis: Optional[Redis] = None, scope: str =
 async def redis_get_json(key: str) -> list | dict | None:
     """Get a key from redis."""
     res = await MENV.database.get(key)
-    if isinstance(res, (str, bytes, bytearray)):
+    if isinstance(res, str | bytes | bytearray):
         return json.loads(res)
     if res is not None:
         _LOGGER.warning("Unexpected type for %s: %s", key, type(res))
@@ -159,7 +167,7 @@ async def redis_get(key: str) -> str | None:
     res = await MENV.database.get(key)
     if isinstance(res, str):
         return res
-    if isinstance(res, (bytes, bytearray)):
+    if isinstance(res, bytes | bytearray):
         return res.decode()
     if res is not None:
         _LOGGER.warning("Unexpected type for %s: %s", key, type(res))
@@ -168,7 +176,10 @@ async def redis_get(key: str) -> str | None:
 
 async def redis_set_set(key: str, new_set: set[str]) -> None:
     """Set the value of a set in redis."""
-    cur_set = set(s if isinstance(s, str) else s.decode() for s in await MENV.database.smembers(key))
+    cur_set = set(
+        s if isinstance(s, str) else s.decode()
+        for s in await MENV.database.smembers(key)
+    )
     dif = list(cur_set - new_set)
     if dif:
         _LOGGER.warning("%s: removing %s", key, dif)
@@ -182,4 +193,7 @@ async def redis_set_set(key: str, new_set: set[str]) -> None:
 
 async def redis_scan(match_str: str) -> list[str]:
     """Return a list of matching keys."""
-    return [s if isinstance(s, str) else s.decode() async for s in MENV.database.scan_iter(match=match_str)]
+    return [
+        s if isinstance(s, str) else s.decode()
+        async for s in MENV.database.scan_iter(match=match_str)
+    ]

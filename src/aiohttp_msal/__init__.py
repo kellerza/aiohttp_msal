@@ -21,13 +21,17 @@ Ts = t.TypeVarTuple("Ts")
 def msal_session(
     *callbacks: t.Callable[[AsyncMSAL], bool | t.Awaitable[bool]],
     at_least_one: bool | None = False,
-) -> t.Callable[[t.Callable[[*Ts, AsyncMSAL], t.Awaitable[_T]]], t.Callable[[*Ts], t.Awaitable[_T]]]:
+) -> t.Callable[
+    [t.Callable[[*Ts, AsyncMSAL], t.Awaitable[_T]]], t.Callable[[*Ts], t.Awaitable[_T]]
+]:
     """Session decorator.
 
     Arguments can include a list of function to perform login tests etc.
     """
 
-    def check_session(func: t.Callable[[*Ts, AsyncMSAL], t.Awaitable[_T]]) -> t.Callable[[*Ts], t.Awaitable[_T]]:
+    def check_session(
+        func: t.Callable[[*Ts, AsyncMSAL], t.Awaitable[_T]],
+    ) -> t.Callable[[*Ts], t.Awaitable[_T]]:
         @wraps(func)
         async def wrapper(*args: *Ts) -> _T:
             if len(args) < 1:
@@ -60,10 +64,13 @@ def auth_ok(ses: AsyncMSAL) -> bool:
     return bool(ses.mail)
 
 
-def auth_or(*args: t.Callable[[AsyncMSAL], bool | t.Awaitable[bool]]) -> t.Callable[[AsyncMSAL], t.Awaitable[bool]]:
+def auth_or(
+    *args: t.Callable[[AsyncMSAL], bool | t.Awaitable[bool]],
+) -> t.Callable[[AsyncMSAL], t.Awaitable[bool]]:
     """Ensure either of the methods is valid. An alternative to at_least_one=True.
 
-    Arguments can include a list of function to perform login tests etc."""
+    Arguments can include a list of function to perform login tests etc.
+    """
 
     async def or_auth(ses: AsyncMSAL) -> bool:
         """Or."""
@@ -78,8 +85,10 @@ def auth_or(*args: t.Callable[[AsyncMSAL], bool | t.Awaitable[bool]]) -> t.Calla
     return or_auth
 
 
-async def app_init_redis_session(app: web.Application, max_age: int = 3600 * 24 * 90) -> None:
-    """OPTIONAL: Initialize aiohttp_session with Redis storage.
+async def app_init_redis_session(
+    app: web.Application, max_age: int = 3600 * 24 * 90
+) -> None:
+    """Init an aiohttp_session with Redis storage helper.
 
     You can initialize your own aiohttp_session & storage provider.
     """
@@ -118,4 +127,6 @@ async def check_proxy() -> None:
                     return
                 raise ConnectionError(await resp.text())
     except Exception as err:  # pylint: disable=broad-except
-        raise ConnectionError("No connection to the Internet. Required for OAuth. Check your Proxy?") from err
+        raise ConnectionError(
+            "No connection to the Internet. Required for OAuth. Check your Proxy?"
+        ) from err

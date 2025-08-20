@@ -7,11 +7,18 @@ Once you have the OAuth tokens store in the session, you are free to make reques
 
 import asyncio
 import json
+from collections.abc import Callable
 from functools import partial, partialmethod, wraps
-from typing import Any, Callable, ClassVar, Literal, Unpack
+from typing import Any, ClassVar, Literal, Unpack
 
 from aiohttp import web
-from aiohttp.client import ClientResponse, ClientSession, StrOrURL, _RequestContextManager, _RequestOptions
+from aiohttp.client import (
+    ClientResponse,
+    ClientSession,
+    _RequestContextManager,
+    _RequestOptions,
+)
+from aiohttp.typedefs import StrOrURL
 from aiohttp_session import Session
 from msal import ConfidentialClientApplication, SerializableTokenCache
 
@@ -63,8 +70,8 @@ class AsyncMSAL:
     Use until such time as MSAL Python gets a true async version.
     """
 
-    _token_cache: SerializableTokenCache = None
-    _app: ConfidentialClientApplication = None
+    _token_cache: SerializableTokenCache
+    _app: ConfidentialClientApplication
     client_session: ClassVar[ClientSession | None] = None
 
     def __init__(
@@ -79,7 +86,7 @@ class AsyncMSAL:
         """
         self.session = session
         self.save_callback = save_callback
-        if not isinstance(session, (Session, dict)):
+        if not isinstance(session, Session | dict):
             raise ValueError(f"session or dict-like object required {session}")
 
     @property
@@ -125,8 +132,8 @@ class AsyncMSAL:
         **kwargs: Any,
     ) -> str:
         """First step - Start the flow."""
-        self.session[TOKEN_CACHE] = None  # type: ignore
-        self.session[USER_EMAIL] = None  # type: ignore
+        self.session[TOKEN_CACHE] = None
+        self.session[USER_EMAIL] = None
         self.session[FLOW_CACHE] = res = self.app.initiate_auth_code_flow(
             scopes or DEFAULT_SCOPES,
             redirect_uri=redirect_uri,
@@ -150,17 +157,22 @@ class AsyncMSAL:
         if "id_token_claims" not in result:
             raise web.HTTPBadRequest(text=f"Expected id_token_claims in {result}")
         self.save_token_cache()
-        self.session[USER_EMAIL] = result.get("id_token_claims").get("preferred_username")
+        if tok := result.get("id_token_claims"):
+            self.session[USER_EMAIL] = tok.get("preferred_username")
 
     async def async_acquire_token_by_auth_code_flow(self, auth_response: Any) -> None:
         """Second step - Acquire token, async version."""
-        await asyncio.get_event_loop().run_in_executor(None, self.acquire_token_by_auth_code_flow, auth_response)
+        await asyncio.get_event_loop().run_in_executor(
+            None, self.acquire_token_by_auth_code_flow, auth_response
+        )
 
     def get_token(self, scopes: list[str] | None = None) -> dict[str, Any] | None:
         """Acquire a token based on username."""
         accounts = self.app.get_accounts()
         if accounts:
-            result = self.app.acquire_token_silent(scopes=scopes or DEFAULT_SCOPES, account=accounts[0])
+            result = self.app.acquire_token_silent(
+                scopes=scopes or DEFAULT_SCOPES, account=accounts[0]
+            )
             self.save_token_cache()
             return result
         return None
@@ -169,7 +181,9 @@ class AsyncMSAL:
         """Acquire a token based on username."""
         return await asyncio.get_event_loop().run_in_executor(None, self.get_token)
 
-    async def request(self, method: HttpMethods, url: StrOrURL, **kwargs: Unpack[_RequestOptions]) -> ClientResponse:
+    async def request(
+        self, method: HttpMethods, url: StrOrURL, **kwargs: Unpack[_RequestOptions]
+    ) -> ClientResponse:
         """Make a request to url using an oauth session.
 
         :param str url: url to send request to
@@ -178,14 +192,13 @@ class AsyncMSAL:
         :return: Response of the request
         :rtype: aiohttp.Response
         """
-
         token = await self.async_get_token()
         if token is None:
             raise web.HTTPClientError(text="No login token available.")
 
         kwargs = kwargs.copy()
         # Ensure headers exist & make a copy
-        headers: dict[str, str] = dict(kwargs.get("headers") or {})  # type:ignore
+        headers = dict[str, str](kwargs.get("headers") or {})  # type:ignore[arg-type]
         kwargs["headers"] = headers
 
         headers["Authorization"] = "Bearer " + token["access_token"]
