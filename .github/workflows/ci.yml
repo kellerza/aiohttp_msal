@@ -5,7 +5,6 @@ on: [push, pull_request]
 env:
   RUFF_VERSION: 0.12.9
   UV_VERSION: 0.8.11
-  TEST_TARGET: "aiohttp_msal"
 
 jobs:
   ruff:
@@ -37,7 +36,7 @@ jobs:
       - name: Install Requirements
         run: uv sync --all-extras --frozen
       - name: Run mypy
-        run: uv run mypy --install-types --non-interactive ${{ env.TEST_TARGET }}
+        run: uv run mypy . --config-file pyproject.toml
 
   pytest:
     name: Run tests Python ${{ matrix.python-version }}
