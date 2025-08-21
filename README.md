@@ -111,4 +111,5 @@ def main()
 uv sync --all-extras
 uv tool install ruff
 uv tool install codespell
+uv tool install pyproject-fmt
 ```
