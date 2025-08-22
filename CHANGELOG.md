@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.0.1 (2025-08-22)
+
+### :dolphin:
+
+- :dolphin:
+  ([`8605277`](https://github.com/kellerza/aiohttp_msal/commit/8605277f8ec4b45c918a79b32dd8b24e68155cc9))
+
+### Other
+
+- Cached_property
+  ([`313003b`](https://github.com/kellerza/aiohttp_msal/commit/313003b1108ea162a56240ff5ed8534b714f028f))
+
+
 ## v1.0.0 (2025-08-21)
 
 ### :dolphin:
