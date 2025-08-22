@@ -8,7 +8,7 @@ Once you have the OAuth tokens store in the session, you are free to make reques
 import asyncio
 import json
 from collections.abc import Callable
-from functools import partial, partialmethod, wraps
+from functools import cached_property, partial, partialmethod, wraps
 from typing import Any, ClassVar, Literal, Unpack
 
 from aiohttp import web
@@ -70,8 +70,6 @@ class AsyncMSAL:
     Use until such time as MSAL Python gets a true async version.
     """
 
-    _token_cache: SerializableTokenCache
-    _app: ConfidentialClientApplication
     client_session: ClassVar[ClientSession | None] = None
 
     def __init__(
@@ -89,33 +87,27 @@ class AsyncMSAL:
         if not isinstance(session, Session | dict):
             raise ValueError(f"session or dict-like object required {session}")
 
-    @property
+    @cached_property
     def token_cache(self) -> SerializableTokenCache:
         """Get the token_cache."""
-        if not self._token_cache:
-            self._token_cache = SerializableTokenCache()
-            # _load_token_cache
-            if self.session and self.session.get(TOKEN_CACHE):
-                self._token_cache.deserialize(self.session[TOKEN_CACHE])
+        res = SerializableTokenCache()
+        if self.session and self.session.get(TOKEN_CACHE):
+            res.deserialize(self.session[TOKEN_CACHE])
+        return res
 
-        return self._token_cache
-
-    @property
+    @cached_property
     def app(self) -> ConfidentialClientApplication:
         """Create the application using the cache.
 
         Based on: https://github.com/Azure-Samples/ms-identity-python-webapp/blob/master/app.py#L76
         """
-        if not self._app:
-            token_cache = self.token_cache
-            self._app = ConfidentialClientApplication(
-                client_id=ENV.SP_APP_ID,
-                client_credential=ENV.SP_APP_PW,
-                authority=ENV.SP_AUTHORITY,  # common/oauth2/v2.0/token'
-                validate_authority=False,
-                token_cache=token_cache,
-            )
-        return self._app
+        return ConfidentialClientApplication(
+            client_id=ENV.SP_APP_ID,
+            client_credential=ENV.SP_APP_PW,
+            authority=ENV.SP_AUTHORITY,  # common/oauth2/v2.0/token'
+            validate_authority=False,
+            token_cache=self.token_cache,
+        )
 
     def save_token_cache(self) -> None:
         """Save the token cache if it changed."""
@@ -227,18 +219,10 @@ class AsyncMSAL:
     get = partialmethod(request_ctx, HTTP_GET)
     post = partialmethod(request_ctx, HTTP_POST)
 
-    # def get(self, url: str, **kwargs: Any) -> _RequestContextManager:
-    #     """GET Request."""
-    #     return _RequestContextManager(self.request(HTTP_GET, url, **kwargs))
-
-    # def post(self, url: str, **kwargs: Any) -> _RequestContextManager:
-    #     """POST request."""
-    #     return _RequestContextManager(self.request(HTTP_POST, url, **kwargs))
-
     @property
     def mail(self) -> str:
         """User email."""
-        return self.session.get("mail", "")
+        return self.session.get(USER_EMAIL, "")
 
     @property
     def manager_mail(self) -> str:
