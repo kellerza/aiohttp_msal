@@ -1,4 +1,4 @@
-# aiohttp_msal Python library
+# Async based MSAL helper for aiohttp - aiohttp_msal Python library
 
 Authorization Code Flow Helper. Learn more about auth-code-flow at
 <https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow>
@@ -99,8 +99,8 @@ from aiohttp_msal.redis_tools import get_session
 def main()
     # Uses the redis.asyncio driver to retrieve the current token
     # Will update the token_cache if a RefreshToken was used
-    ases = asyncio.run(get_session(MYEMAIL))
-    client = GraphClient(ases.get_token)
+    ses = asyncio.run(get_session(MYEMAIL))
+    client = GraphClient(ses.get_token)
     # ...
     # use the Graphclient
 ```

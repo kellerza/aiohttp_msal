@@ -81,7 +81,7 @@ wheels = [
 
 [[package]]
 name = "aiohttp-msal"
-version = "0.8.5"
+version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
