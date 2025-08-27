@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.0.3 (2025-08-27)
+
+### :dolphin:
+
+- :dolphin: 1.0.3
+  ([`5cd5062`](https://github.com/kellerza/aiohttp_msal/commit/5cd5062f71572f12af9c7fba3fafeb86b0c83d39))
+
+### Other
+
+- Keys
+  ([`5a3c468`](https://github.com/kellerza/aiohttp_msal/commit/5a3c46885bdaac9f4d436f72068e34f3f82a52bb))
+
+
 ## v1.0.2 (2025-08-27)
 
 ### :dolphin:
