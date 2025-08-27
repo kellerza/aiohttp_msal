@@ -44,7 +44,7 @@ async def user_login(request: web.Request) -> web.Response:
     session[SESSION_REDIRECT] = urljoin(_to, request.match_info.get("to", ""))
 
     msredirect = get_route(request, URI_USER_AUTHORIZED.lstrip("/"))
-    redir = AsyncMSAL(session).build_auth_code_flow(redirect_uri=msredirect)
+    redir = AsyncMSAL(session).initiate_auth_code_flow(redirect_uri=msredirect)
     return web.HTTPFound(redir)
 
 

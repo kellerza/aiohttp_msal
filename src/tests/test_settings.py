@@ -11,16 +11,17 @@ from aiohttp_msal.settings import ENV, VAR_REQ, SettingsBase
 def test_load() -> None:
     """Load."""
     # see env in pyproject.toml
-    assert ENV.DOMAIN == "mydomain.com"
+    assert ENV.DOMAIN == ""
 
     ENV.load("X_")
     assert ENV.SP_APP_ID == "i1"
     assert ENV.SP_APP_PW == "p1"
+    assert ENV.DOMAIN == "x.com"
 
     ENV.load("Y_")
     assert ENV.asdict() == {
         "Y_COOKIE_NAME": "AIOHTTP_SESSION",
-        "Y_DOMAIN": "mydomain.com",
+        "Y_DOMAIN": "y.com",
         "Y_REDIS": "redis://redis1:6379",
         "Y_SP_APP_ID": "i2",
         # "Y_SP_APP_PW": "p2", # hidden!

@@ -92,10 +92,12 @@ env = [
   "X_SP_APP_PW=p1",
   "X_SP_APP_ID=i1",
   "X_SP_AUTHORITY=a1",
+  "X_DOMAIN=x.com",
 
   "Y_SP_APP_PW=p2",
   "Y_SP_APP_ID=i2",
   "Y_SP_AUTHORITY=a2",
+  "Y_DOMAIN=y.com",
 
   "A_NUM=5",
   "A_BOOL=True",

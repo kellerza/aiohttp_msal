@@ -8,9 +8,10 @@ Once you have the OAuth tokens store in the session, you are free to make reques
 import asyncio
 import json
 from collections.abc import Callable
-from functools import cached_property, partial, partialmethod, wraps
+from functools import cached_property, partialmethod
 from typing import Any, ClassVar, Literal, Unpack
 
+import attrs
 from aiohttp import web
 from aiohttp.client import (
     ClientResponse,
@@ -35,30 +36,13 @@ HTTP_ALLOWED = [HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_PATCH, HTTP_DELETE]
 DEFAULT_SCOPES = ["User.Read", "User.Read.All"]
 
 
-def async_wrap(func: Callable) -> Callable:
-    """Wrap a function doing I/O to run in an executor thread."""
-
-    @wraps(func)
-    async def run(
-        *args: Any,
-        loop: asyncio.AbstractEventLoop | None = None,
-        executor: Any = None,
-        **kwargs: dict[str, Any],
-    ) -> Callable:
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        pfunc = partial(func, *args, **kwargs)
-        return await loop.run_in_executor(executor, pfunc)
-
-    return run
-
-
 # These keys will be used on the aiohttp session
 TOKEN_CACHE = "token_cache"
 FLOW_CACHE = "flow_cache"
 USER_EMAIL = "mail"
 
 
+@attrs.define()
 class AsyncMSAL:
     """AsycMSAL class.
 
@@ -70,22 +54,29 @@ class AsyncMSAL:
     Use until such time as MSAL Python gets a true async version.
     """
 
+    session: Session | dict[str, Any]
+    save_callback: Callable[[Session | dict[str, Any]], None] | None = None
+    """Called if the token cache changes. Optional.
+    Not required when the session parameter is an aiohttp_session.Session.
+    """
+    app: ConfidentialClientApplication = attrs.field(init=False)
+
+    app_kwargs: ClassVar[dict[str, Any] | None] = None
+    """ConfidentialClientApplication kwargs."""
     client_session: ClassVar[ClientSession | None] = None
 
-    def __init__(
-        self,
-        session: Session | dict[str, Any],
-        save_callback: Callable[[Session | dict[str, Any]], None] | None = None,
-    ):
-        """Init the class.
-
-        **save_callback** will be called if the token cache changes. Optional.
-          Not required when the session parameter is an aiohttp_session.Session.
-        """
-        self.session = session
-        self.save_callback = save_callback
-        if not isinstance(session, Session | dict):
-            raise ValueError(f"session or dict-like object required {session}")
+    def __attrs_post_init__(self) -> None:
+        """Init."""
+        kwargs = dict(self.app_kwargs) if self.app_kwargs else {}
+        for key, val in {
+            "client_id": ENV.SP_APP_ID,
+            "client_credential": ENV.SP_APP_PW,
+            "authority": ENV.SP_AUTHORITY,
+            "validate_authority": False,
+            "token_cache": self.token_cache,
+        }.items():
+            kwargs.setdefault(key, val)
+        self.app = ConfidentialClientApplication(**kwargs)
 
     @cached_property
     def token_cache(self) -> SerializableTokenCache:
@@ -95,20 +86,6 @@ class AsyncMSAL:
             res.deserialize(self.session[TOKEN_CACHE])
         return res
 
-    @cached_property
-    def app(self) -> ConfidentialClientApplication:
-        """Create the application using the cache.
-
-        Based on: https://github.com/Azure-Samples/ms-identity-python-webapp/blob/master/app.py#L76
-        """
-        return ConfidentialClientApplication(
-            client_id=ENV.SP_APP_ID,
-            client_credential=ENV.SP_APP_PW,
-            authority=ENV.SP_AUTHORITY,  # common/oauth2/v2.0/token'
-            validate_authority=False,
-            token_cache=self.token_cache,
-        )
-
     def save_token_cache(self) -> None:
         """Save the token cache if it changed."""
         if self.token_cache.has_state_changed:
@@ -116,7 +93,7 @@ class AsyncMSAL:
             if self.save_callback:
                 self.save_callback(self.session)
 
-    def build_auth_code_flow(
+    def initiate_auth_code_flow(
         self,
         redirect_uri: str,
         scopes: list[str] | None = None,
@@ -138,12 +115,16 @@ class AsyncMSAL:
         # https://msal-python.readthedocs.io/en/latest/#msal.ClientApplication.initiate_auth_code_flow
         return str(res["auth_uri"])
 
-    def acquire_token_by_auth_code_flow(self, auth_response: Any) -> None:
+    def acquire_token_by_auth_code_flow(
+        self, auth_response: Any, scopes: list[str] | None = None
+    ) -> None:
         """Second step - Acquire token."""
         # Assume we have it in the cache (added by /login)
         # will raise keryerror if no cache
         auth_code_flow = self.session.pop(FLOW_CACHE)
-        result = self.app.acquire_token_by_auth_code_flow(auth_code_flow, auth_response)
+        result = self.app.acquire_token_by_auth_code_flow(
+            auth_code_flow, auth_response, scopes=scopes
+        )
         if "error" in result:
             raise web.HTTPBadRequest(text=str(result["error"]))
         if "id_token_claims" not in result:

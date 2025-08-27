@@ -9,8 +9,6 @@ from aiohttp_msal.settings_base import VAR_REQ, VAR_REQ_HIDE, SettingsBase
 
 if TYPE_CHECKING:
     from redis.asyncio import Redis
-else:
-    Redis = None
 
 
 @attrs.define
@@ -28,7 +26,7 @@ class MSALSettings(SettingsBase):
     "https://login.microsoftonline.com/common"  # For multi-tenant app
     "https://login.microsoftonline.com/Tenant_Name_or_UUID_Here"."""
 
-    DOMAIN: str = "mydomain.com"
+    DOMAIN: str = attrs.field(metadata=VAR_REQ, default="")
     """Your domain. Used by routes & Redis functions."""
 
     COOKIE_NAME: str = "AIOHTTP_SESSION"
@@ -41,7 +39,7 @@ class MSALSettings(SettingsBase):
 
     REDIS: str = "redis://redis1:6379"
     """OPTIONAL: Redis database connection used by app_init_redis_session()."""
-    database: Redis = None  # type: ignore[assignment]
+    database: "Redis" = attrs.field(init=False)
     """Store the Redis connection when using app_init_redis_session()."""
 
 

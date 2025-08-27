@@ -14,11 +14,6 @@ VAR_REQ = {KEY_REQ: True}
 VAR_HIDE = {KEY_HIDE: True}
 
 
-def _is_hidden(atr: attrs.Attribute) -> bool:
-    """Is this field hidden."""
-    return bool(atr.metadata.get(KEY_HIDE))
-
-
 @attrs.define
 class SettingsBase:
     """Retrieve Settings from environment variables.
