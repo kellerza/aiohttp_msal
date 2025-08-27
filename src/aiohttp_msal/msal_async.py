@@ -34,12 +34,7 @@ HTTP_DELETE = "delete"
 HTTP_ALLOWED = [HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_PATCH, HTTP_DELETE]
 
 DEFAULT_SCOPES = ["User.Read", "User.Read.All"]
-
-
-# These keys will be used on the aiohttp session
-TOKEN_CACHE = "token_cache"
 FLOW_CACHE = "flow_cache"
-USER_EMAIL = "mail"
 
 
 @attrs.define()
@@ -59,37 +54,39 @@ class AsyncMSAL:
     """Called if the token cache changes. Optional.
     Not required when the session parameter is an aiohttp_session.Session.
     """
-    app: ConfidentialClientApplication = attrs.field(init=False)
-
-    app_kwargs: ClassVar[dict[str, Any] | None] = None
+    app_kwargs: dict[str, Any] | None = None
     """ConfidentialClientApplication kwargs."""
     client_session: ClassVar[ClientSession | None] = None
 
-    def __attrs_post_init__(self) -> None:
-        """Init."""
-        kwargs = dict(self.app_kwargs) if self.app_kwargs else {}
-        for key, val in {
+    token_cache_key: str = "token_cache"
+    user_email_key: str = "mail"
+
+    @cached_property
+    def app(self) -> ConfidentialClientApplication:
+        """Get the app."""
+        kwargs = {
             "client_id": ENV.SP_APP_ID,
             "client_credential": ENV.SP_APP_PW,
             "authority": ENV.SP_AUTHORITY,
             "validate_authority": False,
             "token_cache": self.token_cache,
-        }.items():
-            kwargs.setdefault(key, val)
-        self.app = ConfidentialClientApplication(**kwargs)
+        }
+        if self.app_kwargs:
+            kwargs.update(self.app_kwargs)
+        return ConfidentialClientApplication(**kwargs)
 
     @cached_property
     def token_cache(self) -> SerializableTokenCache:
         """Get the token_cache."""
         res = SerializableTokenCache()
-        if self.session and self.session.get(TOKEN_CACHE):
-            res.deserialize(self.session[TOKEN_CACHE])
+        if tc := self.session.get(self.token_cache_key):
+            res.deserialize(tc)
         return res
 
     def save_token_cache(self) -> None:
         """Save the token cache if it changed."""
         if self.token_cache.has_state_changed:
-            self.session[TOKEN_CACHE] = self.token_cache.serialize()
+            self.session[self.token_cache_key] = self.token_cache.serialize()
             if self.save_callback:
                 self.save_callback(self.session)
 
@@ -101,8 +98,8 @@ class AsyncMSAL:
         **kwargs: Any,
     ) -> str:
         """First step - Start the flow."""
-        self.session[TOKEN_CACHE] = None
-        self.session[USER_EMAIL] = None
+        self.session.pop(self.token_cache_key, None)
+        self.session.pop(self.user_email_key, None)
         self.session[FLOW_CACHE] = res = self.app.initiate_auth_code_flow(
             scopes or DEFAULT_SCOPES,
             redirect_uri=redirect_uri,
@@ -131,7 +128,7 @@ class AsyncMSAL:
             raise web.HTTPBadRequest(text=f"Expected id_token_claims in {result}")
         self.save_token_cache()
         if tok := result.get("id_token_claims"):
-            self.session[USER_EMAIL] = tok.get("preferred_username")
+            self.session[self.user_email_key] = tok.get("preferred_username")
 
     async def async_acquire_token_by_auth_code_flow(self, auth_response: Any) -> None:
         """Second step - Acquire token, async version."""
@@ -203,7 +200,7 @@ class AsyncMSAL:
     @property
     def mail(self) -> str:
         """User email."""
-        return self.session.get(USER_EMAIL, "")
+        return self.session.get(self.user_email_key, "")
 
     @property
     def manager_mail(self) -> str:
@@ -223,4 +220,4 @@ class AsyncMSAL:
     @property
     def authenticated(self) -> bool:
         """If the user is logged in."""
-        return bool(self.session.get("mail"))
+        return bool(self.session.get(self.user_email_key))
