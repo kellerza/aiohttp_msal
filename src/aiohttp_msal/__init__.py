@@ -1,10 +1,11 @@
 """aiohttp_msal."""
 
+import json
 import logging
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from inspect import getfullargspec, iscoroutinefunction
-from typing import TypeVar, TypeVarTuple, cast
+from typing import Any, TypeVar, TypeVarTuple, cast
 
 from aiohttp import ClientSession, web
 from aiohttp_session import get_session
@@ -12,6 +13,7 @@ from aiohttp_session import setup as _setup
 
 from aiohttp_msal.msal_async import AsyncMSAL
 from aiohttp_msal.settings import ENV
+from aiohttp_msal.utils import retry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +89,11 @@ def auth_or(
 
 
 async def app_init_redis_session(
-    app: web.Application, max_age: int = 3600 * 24 * 90
+    app: web.Application,
+    max_age: int = 3600 * 24 * 90,
+    check_proxy_cb: Callable[[], Awaitable[None]] | None = None,
+    encoder: Callable[[object], str] = json.dumps,
+    decoder: Callable[[str], Any] = json.loads,
 ) -> None:
     """Init an aiohttp_session with Redis storage helper.
 
@@ -96,7 +102,10 @@ async def app_init_redis_session(
     from aiohttp_session import redis_storage
     from redis.asyncio import from_url
 
-    await check_proxy()
+    if check_proxy_cb:
+        await check_proxy_cb()
+    else:
+        await check_proxy()
 
     _LOGGER.info("Connect to Redis %s", ENV.REDIS)
     try:
@@ -114,10 +123,13 @@ async def app_init_redis_session(
         secure=True,
         domain=ENV.DOMAIN,
         cookie_name=ENV.COOKIE_NAME,
+        encoder=encoder,
+        decoder=decoder,
     )
     _setup(app, storage)
 
 
+@retry
 async def check_proxy() -> None:
     """Test if we have Internet connectivity through proxies etc."""
     try:

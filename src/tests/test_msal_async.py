@@ -7,10 +7,16 @@ def test_ses() -> None:
     """Test session."""
     session = Session(None, new=True, data={"session": {"mail": "j@k", "name": "j"}})
     ses = AsyncMSAL(session)
-    assert str(ses.name) == "j"
-    assert str(ses.mail) == "j@k"
-    assert str(ses.manager_mail) == ""
-    assert str(ses.manager_name) == ""
+    assert ses.name == "j"
+    assert ses.mail == "j@k"
+    assert ses.manager_mail == ""
+    assert ses.manager_name == ""
+
+    assert ses.session["name"] == "j"
+    assert ses.name == "j"
+    ses.name = ""
+    assert "name" not in ses.session
+    assert ses.name == ""
 
 
 # async def test_request() -> None:

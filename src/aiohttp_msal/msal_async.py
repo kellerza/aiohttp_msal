@@ -9,7 +9,7 @@ import asyncio
 import json
 from collections.abc import Callable
 from functools import cached_property, partialmethod
-from typing import Any, ClassVar, Literal, Unpack
+from typing import Any, ClassVar, Literal, Unpack, cast
 
 import attrs
 from aiohttp import web
@@ -24,6 +24,7 @@ from aiohttp_session import Session
 from msal import ConfidentialClientApplication, SerializableTokenCache
 
 from aiohttp_msal.settings import ENV
+from aiohttp_msal.utils import dict_property
 
 HttpMethods = Literal["get", "post", "put", "patch", "delete"]
 HTTP_GET = "get"
@@ -33,11 +34,8 @@ HTTP_PATCH = "patch"
 HTTP_DELETE = "delete"
 HTTP_ALLOWED = [HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_PATCH, HTTP_DELETE]
 
-DEFAULT_SCOPES = ["User.Read", "User.Read.All"]
-FLOW_CACHE = "flow_cache"
 
-
-@attrs.define()
+@attrs.define(slots=False)
 class AsyncMSAL:
     """AsycMSAL class.
 
@@ -58,8 +56,11 @@ class AsyncMSAL:
     """ConfidentialClientApplication kwargs."""
     client_session: ClassVar[ClientSession | None] = None
 
-    token_cache_key: str = "token_cache"
-    user_email_key: str = "mail"
+    token_cache_key: ClassVar[str] = "token_cache"
+    user_email_key: ClassVar[str] = "mail"
+    flow_cache_key: ClassVar[str] = "flow_cache"
+    redirect_key = "redirect"
+    default_scopes: ClassVar[list[str]] = ["User.Read", "User.Read.All"]
 
     @cached_property
     def app(self) -> ConfidentialClientApplication:
@@ -100,8 +101,8 @@ class AsyncMSAL:
         """First step - Start the flow."""
         self.session.pop(self.token_cache_key, None)
         self.session.pop(self.user_email_key, None)
-        self.session[FLOW_CACHE] = res = self.app.initiate_auth_code_flow(
-            scopes or DEFAULT_SCOPES,
+        self.session[self.flow_cache_key] = res = self.app.initiate_auth_code_flow(
+            scopes or self.default_scopes,
             redirect_uri=redirect_uri,
             response_mode="form_post",
             prompt=prompt,
@@ -118,7 +119,7 @@ class AsyncMSAL:
         """Second step - Acquire token."""
         # Assume we have it in the cache (added by /login)
         # will raise keryerror if no cache
-        auth_code_flow = self.session.pop(FLOW_CACHE)
+        auth_code_flow = self.session.pop(self.flow_cache_key)
         result = self.app.acquire_token_by_auth_code_flow(
             auth_code_flow, auth_response, scopes=scopes
         )
@@ -141,7 +142,7 @@ class AsyncMSAL:
         accounts = self.app.get_accounts()
         if accounts:
             result = self.app.acquire_token_silent(
-                scopes=scopes or DEFAULT_SCOPES, account=accounts[0]
+                scopes=scopes or self.default_scopes, account=accounts[0]
             )
             self.save_token_cache()
             return result
@@ -198,26 +199,12 @@ class AsyncMSAL:
     post = partialmethod(request_ctx, HTTP_POST)
 
     @property
-    def mail(self) -> str:
-        """User email."""
-        return self.session.get(self.user_email_key, "")
-
-    @property
-    def manager_mail(self) -> str:
-        """User's manager's email."""
-        return self.session.get("m_mail", "")
-
-    @property
-    def manager_name(self) -> str:
-        """User's manager's name."""
-        return self.session.get("m_name", "")
-
-    @property
-    def name(self) -> str:
-        """User's display name."""
-        return self.session.get("name", "")
-
-    @property
     def authenticated(self) -> bool:
         """If the user is logged in."""
         return bool(self.session.get(self.user_email_key))
+
+    name = cast(str, dict_property("session", "name"))
+    mail = dict_property("session", user_email_key)
+    manager_name = dict_property("session", "m_name")
+    manager_mail = dict_property("session", "m_mail")
+    redirect = dict_property("session", redirect_key)

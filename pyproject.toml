@@ -41,8 +41,6 @@ dev = [
 ]
 
 [tool.ruff]
-include = [ "aiohttp_msal/**/*.py", "tests/*.py" ]
-
 format.line-ending = "lf"
 format.docstring-code-format = true
 lint.select = [
