@@ -9,12 +9,7 @@ from aiohttp import web
 from aiohttp_session import get_session, new_session
 
 from aiohttp_msal import ENV, auth_ok, msal_session
-from aiohttp_msal.helpers import (
-    check_auth_response,
-    get_manager_info,
-    get_user_info,
-    html_wrap,
-)
+from aiohttp_msal.helpers import get_manager_info, get_url, get_user_info, html_wrap
 from aiohttp_msal.msal_async import AsyncMSAL
 
 ROUTES = web.RouteTableDef()
@@ -22,17 +17,6 @@ ROUTES = web.RouteTableDef()
 URI_USER_LOGIN = "/user/login"
 URI_USER_AUTHORIZED = "/user/authorized"
 SESSION_REDIRECT = "redirect"
-
-
-def get_route(request: web.Request, url: str) -> str:
-    """Retrieve server route from request.
-
-    localhost and production on http:// with nginx proxy that adds TLS/SSL.
-    """
-    url = str(request.url.origin() / url)
-    if "localhost" not in url:
-        url = url.replace("http:", "https:", 1)
-    return url
 
 
 @ROUTES.get(URI_USER_LOGIN)
@@ -47,7 +31,7 @@ async def user_login(request: web.Request) -> web.Response:
         _to = "/"
     session[SESSION_REDIRECT] = urljoin(_to, request.match_info.get("to", ""))
 
-    msredirect = get_route(request, URI_USER_AUTHORIZED.lstrip("/"))
+    msredirect = get_url(request, URI_USER_AUTHORIZED.lstrip("/"))
     redir = AsyncMSAL(session).initiate_auth_code_flow(redirect_uri=msredirect)
     raise web.HTTPFound(redir)
 
@@ -55,9 +39,10 @@ async def user_login(request: web.Request) -> web.Response:
 @ROUTES.post(URI_USER_AUTHORIZED)
 async def user_authorized(request: web.Request) -> web.Response:
     """Complete the auth code flow."""
-    aiomsal, msg = await check_auth_response(request, AsyncMSAL)
+    aiomsal = await AsyncMSAL.from_request(request)
+    ok, msg = await aiomsal.async_acquire_token_by_auth_code_flow_plus(request)
 
-    if aiomsal and not msg:
+    if ok and not msg:
         try:
             raise web.HTTPFound(aiomsal.redirect)
         finally:
@@ -149,7 +134,7 @@ async def user_logout(request: web.Request, ses: AsyncMSAL) -> web.Response:
     if ref:
         _to = urljoin(ref, _to)
     else:
-        _to = get_route(request, _to)
+        _to = get_url(request, _to)
 
     return web.HTTPFound(
         f"https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri={_to}"

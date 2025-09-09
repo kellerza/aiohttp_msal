@@ -112,4 +112,6 @@ uv sync --all-extras
 uv tool install ruff
 uv tool install codespell
 uv tool install pyproject-fmt
+uv tool install prek
+prek install  # add pre-commit hooks
 ```

@@ -7,9 +7,10 @@ Once you have the OAuth tokens store in the session, you are free to make reques
 
 import asyncio
 import json
+import logging
 from collections.abc import Callable
 from functools import cached_property, partialmethod
-from typing import Any, ClassVar, Literal, Unpack, cast
+from typing import Any, ClassVar, Literal, Self, TypeVar, Unpack, cast
 
 import attrs
 from aiohttp import web
@@ -20,11 +21,14 @@ from aiohttp.client import (
     _RequestOptions,
 )
 from aiohttp.typedefs import StrOrURL
-from aiohttp_session import Session
+from aiohttp_session import Session, get_session, new_session
 from msal import ConfidentialClientApplication, SerializableTokenCache
 
+from aiohttp_msal import helpers
 from aiohttp_msal.settings import ENV
 from aiohttp_msal.utils import dict_property
+
+_LOG = logging.getLogger(__name__)
 
 HttpMethods = Literal["get", "post", "put", "patch", "delete"]
 HTTP_GET = "get"
@@ -33,6 +37,8 @@ HTTP_PUT = "put"
 HTTP_PATCH = "patch"
 HTTP_DELETE = "delete"
 HTTP_ALLOWED = [HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_PATCH, HTTP_DELETE]
+
+T = TypeVar("T")
 
 
 @attrs.define(slots=False)
@@ -54,13 +60,45 @@ class AsyncMSAL:
     """
     app_kwargs: dict[str, Any] | None = None
     """ConfidentialClientApplication kwargs."""
-    client_session: ClassVar[ClientSession | None] = None
 
+    client_session: ClassVar[ClientSession | None] = None
     token_cache_key: ClassVar[str] = "token_cache"
     user_email_key: ClassVar[str] = "mail"
     flow_cache_key: ClassVar[str] = "flow_cache"
-    redirect_key = "redirect"
+    redirect_key: ClassVar[str] = "redirect"
     default_scopes: ClassVar[list[str]] = ["User.Read", "User.Read.All"]
+
+    @classmethod
+    async def from_request(
+        cls,
+        request: web.Request,
+        /,
+        allow_new: bool = False,
+        app_kwargs: dict[str, Any] | None = None,
+    ) -> Self:
+        """Get the session or raise an exception."""
+        try:
+            session = await get_session(request)
+            return cls(session, app_kwargs=app_kwargs)
+        except TypeError as err:
+            cookie = request.get(ENV.COOKIE_NAME)
+            _LOG.error(
+                "Invalid session, %s: %s [cookie: %s]",
+                "create new" if allow_new else "fail",
+                err,
+                request.get(ENV.COOKIE_NAME),
+                cookie,
+            )
+            if allow_new:
+                return cls(await new_session(request), app_kwargs=app_kwargs)
+
+            text = "Invalid session. Login for a new session: '/usr/login'"
+
+            if not cookie:
+                cookies = dict(request.cookies.items())
+                text = f"Cookie empty. Expected '{ENV.COOKIE_NAME}' in cookies: {list(cookies)}. Cookie should be set with Samesite:None"
+
+            raise web.HTTPException(text=text) from None
 
     @cached_property
     def app(self) -> ConfidentialClientApplication:
@@ -118,7 +156,7 @@ class AsyncMSAL:
     ) -> None:
         """Second step - Acquire token."""
         # Assume we have it in the cache (added by /login)
-        # will raise keryerror if no cache
+        # will raise KeyError if not in cache
         auth_code_flow = self.session.pop(self.flow_cache_key)
         result = self.app.acquire_token_by_auth_code_flow(
             auth_code_flow, auth_response, scopes=scopes
@@ -208,3 +246,67 @@ class AsyncMSAL:
     manager_name = dict_property("session", "m_name")
     manager_mail = dict_property("session", "m_mail")
     redirect = dict_property("session", redirect_key)
+
+    async def async_acquire_token_by_auth_code_flow_plus(
+        self,
+        request: web.Request,
+        get_info: Literal["user", "manager", ""] = "manager",
+    ) -> tuple[bool, list[str]]:
+        """Enhanced version of async_acquire_token_by_auth_code_flow. Returns issues.
+
+        Parse the auth response from the request, checks for valid keys,
+        acquire the token and get_info.
+
+        response_mode for the auth_code flow should be "form_post"
+        """
+        auth_response = dict(await request.post())
+        assert isinstance(self.session, Session)
+
+        msg = list[str]()
+
+        # Ensure all expected variables were returned...
+        if not all(auth_response.get(k) for k in ["code", "session_state", "state"]):
+            msg.append("Expected 'code', 'session_state', 'state' in auth_response")
+            msg.append(f"Received auth_response: {list(auth_response)}")
+            return False, msg
+
+        if self.session.new:
+            msg.append(
+                "Warning: This is a new session and may not have all expected values."
+            )
+
+        if not self.session.get(self.flow_cache_key):
+            msg.append(f"<b>Expected '{self.flow_cache_key}' in session</b>")
+            msg.append(helpers.html_table(self.session))
+
+        self.redirect = "/" + self.redirect.lstrip("/")
+
+        if msg:
+            return False, msg
+
+        try:
+            await self.async_acquire_token_by_auth_code_flow(auth_response)
+        except Exception as err:
+            msg.append(
+                "<b>Could not get token</b> - async_acquire_token_by_auth_code_flow"
+            )
+            msg.append(str(err))
+            return False, msg
+
+        if not msg:
+            try:
+                if get_info in ("user", "manager"):
+                    await helpers.get_user_info(self)
+                if get_info == "manager":
+                    await helpers.get_manager_info(self)
+            except Exception as err:
+                msg.append("Could not get org info from MS graph")
+                msg.append(str(err))
+                self.mail = ""
+                self.name = ""
+
+            if self.session.get("mail"):
+                for lcb in ENV.login_callback:
+                    await lcb(self)
+
+        return True, msg
