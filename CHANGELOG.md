@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.0.7 (2025-09-09)
+
+### 
+
+- ENV json
+  ([`b35e232`](https://github.com/kellerza/aiohttp_msal/commit/b35e2327f2009c07e53fb3604c7d27ba5309ad00))
+
+
 ## v1.0.6 (2025-09-09)
 
 ### 
