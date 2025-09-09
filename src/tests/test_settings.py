@@ -56,3 +56,8 @@ def test_types() -> None:
 
     with pytest.raises(ValueError):
         res.load("C_")
+
+
+def test_db() -> None:
+    """Test database settings."""
+    assert not ENV.database

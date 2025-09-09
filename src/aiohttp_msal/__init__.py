@@ -1,11 +1,10 @@
 """aiohttp_msal."""
 
-import json
 import logging
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from inspect import getfullargspec, iscoroutinefunction
-from typing import Any, TypeVar, TypeVarTuple, cast
+from typing import TypeVar, TypeVarTuple, cast
 
 from aiohttp import ClientSession, web
 from aiohttp_session import get_session
@@ -92,8 +91,6 @@ async def app_init_redis_session(
     app: web.Application,
     max_age: int = 3600 * 24 * 90,
     check_proxy_cb: Callable[[], Awaitable[None]] | None = None,
-    encoder: Callable[[object], str] = json.dumps,
-    decoder: Callable[[str], Any] = json.loads,
 ) -> None:
     """Init an aiohttp_session with Redis storage helper.
 
@@ -123,8 +120,8 @@ async def app_init_redis_session(
         secure=True,
         domain=ENV.DOMAIN,
         cookie_name=ENV.COOKIE_NAME,
-        encoder=encoder,
-        decoder=decoder,
+        encoder=ENV.dumps,
+        decoder=ENV.loads,
     )
     _setup(app, storage)
 

@@ -1,5 +1,6 @@
 """Settings."""
 
+import json
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any
 
@@ -39,8 +40,11 @@ class MSALSettings(SettingsBase):
 
     REDIS: str = "redis://redis1:6379"
     """OPTIONAL: Redis database connection used by app_init_redis_session()."""
-    database: "Redis" = attrs.field(init=False)
+    database: "Redis" = attrs.field(init=False, default=None)
     """Store the Redis connection when using app_init_redis_session()."""
+
+    dumps: Callable[[Any], str] = attrs.field(default=json.dumps)
+    loads: Callable[[str | bytes | bytearray], Any] = attrs.field(default=json.loads)
 
 
 ENV = MSALSettings()

@@ -6,7 +6,6 @@ Once you have the OAuth tokens store in the session, you are free to make reques
 """
 
 import asyncio
-import json
 import logging
 from collections.abc import Callable
 from functools import cached_property, partialmethod
@@ -43,7 +42,7 @@ T = TypeVar("T")
 
 @attrs.define(slots=False)
 class AsyncMSAL:
-    """AsycMSAL class.
+    """AsyncMSAL class.
 
     Authorization Code Flow Helper. Learn more about auth-code-flow at
     https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow
@@ -220,7 +219,7 @@ class AsyncMSAL:
         elif method in [HTTP_POST, HTTP_PUT, HTTP_PATCH]:
             headers["Content-type"] = "application/json"
             if "data" in kwargs:
-                kwargs["data"] = json.dumps(kwargs["data"])  # auto convert to json
+                kwargs["data"] = ENV.dumps(kwargs["data"])  # auto convert to json
 
         if not AsyncMSAL.client_session:
             AsyncMSAL.client_session = ClientSession(trust_env=True)
