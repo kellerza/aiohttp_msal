@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.0.6 (2025-09-09)
+
+### 
+
+- Get_session
+  ([`f8db7f3`](https://github.com/kellerza/aiohttp_msal/commit/f8db7f3493e2af7c53411016ba5ddd63ae521f42))
+
+
 ## v1.0.5 (2025-09-09)
 
 ### 
