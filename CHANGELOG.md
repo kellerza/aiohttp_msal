@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.0.5 (2025-09-09)
+
+### 
+
+- Async_acquire_token_by_auth_code_flow_plus
+  ([`dbc670d`](https://github.com/kellerza/aiohttp_msal/commit/dbc670d9cd1d0dc4fad53bb84c005c76bd23f6aa))
+
+
 ## v1.0.4 (2025-08-28)
 
 ### :dolphin:
