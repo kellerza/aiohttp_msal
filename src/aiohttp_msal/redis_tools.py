@@ -6,14 +6,14 @@ import logging
 import time
 from collections.abc import AsyncGenerator
 from contextlib import AsyncExitStack, asynccontextmanager
-from typing import Any
+from typing import Any, TypeVar
 
 from redis.asyncio import Redis, from_url
 
 from aiohttp_msal.msal_async import AsyncMSAL
 from aiohttp_msal.settings import ENV as MENV
 
-_LOGGER = logging.getLogger(__name__)
+_LOG = logging.getLogger(__name__)
 
 SES_KEYS = ("mail", "name", "m_mail", "m_name")
 
@@ -22,10 +22,10 @@ SES_KEYS = ("mail", "name", "m_mail", "m_name")
 async def get_redis() -> AsyncGenerator[Redis, None]:
     """Get a Redis connection."""
     if MENV.database:
-        _LOGGER.debug("Using redis from environment")
+        _LOG.debug("Using redis from environment")
         yield MENV.database
         return
-    _LOGGER.info("Connect to Redis %s", MENV.REDIS)
+    _LOG.info("Connect to Redis %s", MENV.REDIS)
     redis = from_url(MENV.REDIS)  # decode_responses=True not allowed aiohttp_session
     MENV.database = redis
     try:
@@ -37,6 +37,7 @@ async def get_redis() -> AsyncGenerator[Redis, None]:
 
 async def session_iter(
     redis: Redis,
+    /,
     *,
     match: dict[str, str] | None = None,
     key_match: str | None = None,
@@ -74,7 +75,7 @@ async def session_iter(
 
 
 async def session_clean(
-    redis: Redis, *, max_age: int = 90, expected_keys: dict[str, Any] | None = None
+    redis: Redis, /, *, max_age: int = 90, expected_keys: dict[str, Any] | None = None
 ) -> None:
     """Clear session entries older than max_age days."""
     rem, keep = 0, 0
@@ -89,12 +90,12 @@ async def session_clean(
                 keep += 1
     finally:
         if rem:
-            _LOGGER.info("Sessions removed: %s (%s total)", rem, keep)
+            _LOG.info("Sessions removed: %s (%s total)", rem, keep)
         else:
-            _LOGGER.debug("No sessions removed (%s total)", keep)
+            _LOG.debug("No sessions removed (%s total)", keep)
 
 
-async def invalid_sessions(redis: Redis) -> None:
+async def invalid_sessions(redis: Redis, /) -> None:
     """Find & clean invalid sessions."""
     async for key in redis.scan_iter(count=100, match=f"{MENV.COOKIE_NAME}*"):
         if not isinstance(key, str):
@@ -107,12 +108,17 @@ async def invalid_sessions(redis: Redis) -> None:
             assert isinstance(val["created"], int)
             assert isinstance(val["session"], dict)
         except Exception as err:
-            _LOGGER.warning("Removing session %s: %s", key, err)
+            _LOG.warning("Removing session %s: %s", key, err)
             await redis.delete(key)
 
 
-def _session_factory(key: str, created: int, session: dict) -> AsyncMSAL:
-    """Create a AsyncMSAL session.
+T = TypeVar("T", bound=AsyncMSAL)
+
+
+def async_msal_factory(
+    cls: type[T], key: str, created: int, session: dict[str, Any], /
+) -> T:
+    """Create a AsyncMSAL session with a save_callback.
 
     When get_token refreshes the token retrieved from Redis, the save_cache callback
     will be responsible to update the cache in Redis.
@@ -130,12 +136,17 @@ def _session_factory(key: str, created: int, session: dict) -> AsyncMSAL:
         except RuntimeError:
             asyncio.run(async_save_cache(*args))
 
-    return AsyncMSAL(session, save_callback=save_cache)
+    return cls(session, save_callback=save_cache)
 
 
 async def get_session(
-    email: str, *, redis: Redis | None = None, scope: str = ""
-) -> AsyncMSAL:
+    cls: type[T],
+    email: str,
+    /,
+    *,
+    redis: Redis | None = None,
+    scope: str = "",
+) -> T:
     """Get a session from Redis."""
     cnt = 0
     async with AsyncExitStack() as stack:
@@ -143,22 +154,22 @@ async def get_session(
             redis = await stack.enter_async_context(get_redis())
         async for key, created, session in session_iter(redis, match={"mail": email}):
             cnt += 1
-            if scope and scope not in str(session.get("token_cache")).lower():
+            if scope and scope not in str(session.get(cls.token_cache_key)).lower():
                 continue
-            return _session_factory(key, created, session)
+            return async_msal_factory(cls, key, created, session)
     msg = f"Session for {email}"
     if not scope:
         raise ValueError(f"{msg} not found")
     raise ValueError(f"{msg} with scope {scope} not found ({cnt} checked)")
 
 
-async def redis_get_json(key: str) -> list | dict | None:
+async def redis_get_json(key: str) -> list[str] | dict[str, Any] | None:
     """Get a key from redis."""
     res = await MENV.database.get(key)
     if isinstance(res, str | bytes | bytearray):
         return json.loads(res)
     if res is not None:
-        _LOGGER.warning("Unexpected type for %s: %s", key, type(res))
+        _LOG.warning("Unexpected type for %s: %s", key, type(res))
     return None
 
 
@@ -170,7 +181,7 @@ async def redis_get(key: str) -> str | None:
     if isinstance(res, bytes | bytearray):
         return res.decode()
     if res is not None:
-        _LOGGER.warning("Unexpected type for %s: %s", key, type(res))
+        _LOG.warning("Unexpected type for %s: %s", key, type(res))
     return None
 
 
@@ -182,16 +193,16 @@ async def redis_set_set(key: str, new_set: set[str]) -> None:
     )
     dif = list(cur_set - new_set)
     if dif:
-        _LOGGER.warning("%s: removing %s", key, dif)
+        _LOG.warning("%s: removing %s", key, dif)
         await MENV.database.srem(key, *dif)
 
     dif = list(new_set - cur_set)
     if dif:
-        _LOGGER.info("%s: adding %s", key, dif)
+        _LOG.info("%s: adding %s", key, dif)
         await MENV.database.sadd(key, *dif)
 
 
-async def redis_scan(match_str: str) -> list[str]:
+async def redis_scan_keys(match_str: str) -> list[str]:
     """Return a list of matching keys."""
     return [
         s if isinstance(s, str) else s.decode()

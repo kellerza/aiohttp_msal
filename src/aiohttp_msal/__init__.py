@@ -15,7 +15,7 @@ from aiohttp_msal.msal_async import AsyncMSAL
 from aiohttp_msal.settings import ENV
 from aiohttp_msal.utils import retry
 
-_LOGGER = logging.getLogger(__name__)
+_LOG = logging.getLogger(__name__)
 
 _T = TypeVar("_T")
 Ts = TypeVarTuple("Ts")
@@ -107,7 +107,7 @@ async def app_init_redis_session(
     else:
         await check_proxy()
 
-    _LOGGER.info("Connect to Redis %s", ENV.REDIS)
+    _LOG.info("Connect to Redis %s", ENV.REDIS)
     try:
         ENV.database = from_url(ENV.REDIS)
         # , encoding="utf-8", decode_responses=True
