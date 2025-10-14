@@ -2,6 +2,23 @@
 
 <!-- version list -->
 
+## v1.0.9 (2025-10-14)
+
+### 
+
+- ---
+  ([`dd76569`](https://github.com/kellerza/aiohttp_msal/commit/dd76569975530affdac727fce2d436f54b83142e))
+
+- Bump astral-sh/setup-uv from 6 to 7
+  ([`dd76569`](https://github.com/kellerza/aiohttp_msal/commit/dd76569975530affdac727fce2d436f54b83142e))
+
+- Bumps [astral-sh/setup-uv](https://github.com/astral-sh/setup-uv) from 6 to 7.
+  ([`dd76569`](https://github.com/kellerza/aiohttp_msal/commit/dd76569975530affdac727fce2d436f54b83142e))
+
+- Signed-off-by: dependabot[bot] <support@github.com>
+  ([`dd76569`](https://github.com/kellerza/aiohttp_msal/commit/dd76569975530affdac727fce2d436f54b83142e))
+
+
 ## v1.0.8 (2025-10-14)
 
 ### 
