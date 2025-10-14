@@ -4,7 +4,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from inspect import getfullargspec, iscoroutinefunction
-from typing import TypeVar, TypeVarTuple, cast
+from typing import cast
 
 from aiohttp import ClientSession, web
 from aiohttp_session import get_session
@@ -16,15 +16,12 @@ from aiohttp_msal.utils import retry
 
 _LOG = logging.getLogger(__name__)
 
-_T = TypeVar("_T")
-Ts = TypeVarTuple("Ts")
 
-
-def msal_session(
+def msal_session[T, *Ts](
     *callbacks: Callable[[AsyncMSAL], bool | Awaitable[bool]],
     at_least_one: bool | None = False,
 ) -> Callable[
-    [Callable[[*Ts, AsyncMSAL], Awaitable[_T]]], Callable[[*Ts], Awaitable[_T]]
+    [Callable[[*Ts, AsyncMSAL], Awaitable[T]]], Callable[[*Ts], Awaitable[T]]
 ]:
     """Session decorator.
 
@@ -32,10 +29,10 @@ def msal_session(
     """
 
     def check_session(
-        func: Callable[[*Ts, AsyncMSAL], Awaitable[_T]],
-    ) -> Callable[[*Ts], Awaitable[_T]]:
+        func: Callable[[*Ts, AsyncMSAL], Awaitable[T]],
+    ) -> Callable[[*Ts], Awaitable[T]]:
         @wraps(func)
-        async def wrapper(*args: *Ts) -> _T:
+        async def wrapper(*args: *Ts) -> T:
             if len(args) < 1:
                 raise AssertionError("Requires a Request as the first parameter")
             request = cast(web.Request, args[0])
@@ -104,12 +101,13 @@ async def app_init_redis_session(
     else:
         await check_proxy()
 
-    _LOG.info("Connect to Redis %s", ENV.REDIS)
-    try:
-        ENV.database = from_url(ENV.REDIS)
-        # , encoding="utf-8", decode_responses=True
-    except ConnectionRefusedError as err:
-        raise ConnectionError("Could not connect to REDIS server") from err
+    if ENV.database is None:
+        _LOG.info("Connect to Redis %s", ENV.REDIS)
+        try:
+            ENV.database = from_url(ENV.REDIS)
+            # , encoding="utf-8", decode_responses=True
+        except ConnectionRefusedError as err:
+            raise ConnectionError("Could not connect to REDIS server") from err
 
     storage = redis_storage.RedisStorage(
         ENV.database,
@@ -120,8 +118,8 @@ async def app_init_redis_session(
         secure=True,
         domain=ENV.DOMAIN,
         cookie_name=ENV.COOKIE_NAME,
-        encoder=ENV.dumps,
-        decoder=ENV.loads,
+        encoder=ENV.json_dumps,
+        decoder=ENV.json_loads,
     )
     _setup(app, storage)
 
@@ -129,13 +127,13 @@ async def app_init_redis_session(
 @retry
 async def check_proxy() -> None:
     """Test if we have Internet connectivity through proxies etc."""
-    try:
-        async with ClientSession(trust_env=True) as cses:
-            async with cses.get("http://httpbin.org/get") as resp:
+    print("Check Internet connectivity for OAuth", end="", flush=True)
+    async with ClientSession(trust_env=True) as cses:
+        for url in ("https://www.google.com", "http://httpbin.org/get"):
+            async with cses.get(url) as resp:
                 if resp.ok:
+                    print(" ... ok", flush=True)
                     return
-                raise ConnectionError(await resp.text())
-    except Exception as err:
-        raise ConnectionError(
-            "No connection to the Internet. Required for OAuth. Check your Proxy?"
-        ) from err
+    raise ConnectionError(
+        "No connection to the Internet. Required for OAuth. Check your Proxy?"
+    )

@@ -43,8 +43,10 @@ class MSALSettings(SettingsBase):
     database: "Redis" = attrs.field(init=False, default=None)
     """Store the Redis connection when using app_init_redis_session()."""
 
-    dumps: Callable[[Any], str] = attrs.field(default=json.dumps)
-    loads: Callable[[str | bytes | bytearray], Any] = attrs.field(default=json.loads)
+    json_dumps: Callable[[Any], str] = attrs.field(default=json.dumps)
+    json_loads: Callable[[str | bytes | bytearray], Any] = attrs.field(
+        default=json.loads
+    )
 
 
 ENV = MSALSettings()

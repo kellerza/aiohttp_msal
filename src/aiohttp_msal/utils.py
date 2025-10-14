@@ -3,13 +3,10 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 from functools import partial, wraps
-from typing import Any, ParamSpec, TypeVar
-
-T = TypeVar("T")
-P = ParamSpec("P")
+from typing import Any
 
 
-def async_wrap(
+def async_wrap[T](
     func: Callable[..., T],
 ) -> Callable[..., Awaitable[T]]:
     """Wrap a function doing I/O to run in an executor thread."""
@@ -49,17 +46,7 @@ class dict_property(property):
             getattr(instance, self.dict_name, {}).__setitem__(self.prop_name, value)
 
 
-# def dict_property(dict_name: str, prop_name: str) -> property:
-#     """Create properties for a dictionary."""
-#     return property(
-#         fget=lambda self: str(getattr(self, dict_name).get(prop_name, "")),
-#         fset=lambda self, v: getattr(self, dict_name).set(prop_name, v),
-#         fdel=lambda self: getattr(self, dict_name).pop(prop_name, None),
-#         doc=f'self.{dict_name}["{prop_name}"]',
-#     )
-
-
-def retry(func: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
+def retry[T, **P](func: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
     """Retry if tenacity is installed."""
 
     @wraps(func)

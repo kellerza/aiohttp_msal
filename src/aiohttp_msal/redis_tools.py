@@ -5,7 +5,7 @@ import logging
 import time
 from collections.abc import AsyncGenerator
 from contextlib import AsyncExitStack, asynccontextmanager
-from typing import Any, TypeVar
+from typing import Any
 
 from redis.asyncio import Redis, from_url
 
@@ -56,7 +56,7 @@ async def session_iter(
         sval = await redis.get(key)
         created, ses = 0, {}
         try:
-            val = ENV.loads(sval)  # type: ignore[arg-type]
+            val = ENV.json_loads(sval)  # type: ignore[arg-type]
             created = int(val["created"])
             ses = val["session"]
         except Exception:
@@ -103,7 +103,7 @@ async def invalid_sessions(redis: Redis, /) -> None:
         if sval is None:
             continue
         try:
-            val: dict = ENV.loads(sval)
+            val: dict = ENV.json_loads(sval)
             assert isinstance(val["created"], int)
             assert isinstance(val["session"], dict)
         except Exception as err:
@@ -111,10 +111,7 @@ async def invalid_sessions(redis: Redis, /) -> None:
             await redis.delete(key)
 
 
-T = TypeVar("T", bound=AsyncMSAL)
-
-
-def async_msal_factory(
+def async_msal_factory[T: AsyncMSAL](
     cls: type[T], key: str, created: int, session: dict[str, Any], /
 ) -> T:
     """Create a AsyncMSAL session with a save_callback.
@@ -126,7 +123,7 @@ def async_msal_factory(
     async def async_save_cache(_: dict) -> None:
         """Save the token cache to Redis."""
         async with get_redis() as rd2:
-            await rd2.set(key, ENV.dumps({"created": created, "session": session}))
+            await rd2.set(key, ENV.json_dumps({"created": created, "session": session}))
 
     def save_cache(*args: Any) -> None:
         """Save the token cache to Redis."""
@@ -138,7 +135,7 @@ def async_msal_factory(
     return cls(session, save_callback=save_cache)
 
 
-async def get_session(
+async def get_session[T: AsyncMSAL](
     cls: type[T],
     email: str,
     /,
@@ -166,7 +163,7 @@ async def redis_get_json(key: str) -> list[Any] | dict[str, Any] | None:
     """Get a key from redis."""
     res = await ENV.database.get(key)
     if isinstance(res, str | bytes | bytearray):
-        return ENV.loads(res)
+        return ENV.json_loads(res)
     if res is not None:
         _LOG.warning("Unexpected type for %s: %s", key, type(res))
     return None

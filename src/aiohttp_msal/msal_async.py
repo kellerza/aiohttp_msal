@@ -9,7 +9,7 @@ import asyncio
 import logging
 from collections.abc import Callable
 from functools import cached_property, partialmethod
-from typing import Any, ClassVar, Literal, Self, TypeVar, Unpack, cast
+from typing import Any, ClassVar, Literal, Self, Unpack, cast
 
 import attrs
 from aiohttp import web
@@ -36,8 +36,6 @@ HTTP_PUT = "put"
 HTTP_PATCH = "patch"
 HTTP_DELETE = "delete"
 HTTP_ALLOWED = [HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_PATCH, HTTP_DELETE]
-
-T = TypeVar("T")
 
 
 @attrs.define(slots=False)
@@ -219,7 +217,7 @@ class AsyncMSAL:
         elif method in [HTTP_POST, HTTP_PUT, HTTP_PATCH]:
             headers["Content-type"] = "application/json"
             if "data" in kwargs:
-                kwargs["data"] = ENV.dumps(kwargs["data"])  # auto convert to json
+                kwargs["data"] = ENV.json_dumps(kwargs["data"])  # auto convert to json
 
         if not AsyncMSAL.client_session:
             AsyncMSAL.client_session = ClientSession(trust_env=True)

@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "uv_build"
-requires = [ "uv-build" ]  # >=0.5.15,<0.6
+requires = [ "uv-build>=0.8.20,<0.9" ]
 
 [project]
 name = "aiohttp-msal"
@@ -8,21 +8,21 @@ version = "1.0.7"
 description = "Helper Library to use the Microsoft Authentication Library (MSAL) with aiohttp"
 readme = "README.md"
 keywords = [ "aiohttp", "asyncio", "msal", "oauth" ]
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 authors = [ { name = "Johann Kellerman", email = "kellerza@gmail.com" } ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Natural Language :: English",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
   "aiohttp>=3.11.18,<3.13",
-  "aiohttp-session>=2.12.1,<3",
+  "aiohttp-session[aioredis]>=2.12.1,<3",
   "attrs>=25.3,<26",
   "msal>=1.32.3,<2",
 ]
@@ -31,7 +31,9 @@ urls.Homepage = "https://github.com/kellerza/aiohttp_msal"
 
 [dependency-groups]
 dev = [
+  "codespell",
   "mypy",
+  "pyproject-fmt",
   "pytest",
   "pytest-aiohttp",
   "pytest-asyncio",
@@ -73,8 +75,7 @@ lint.ignore = [
 lint.isort.no-lines-before = [ "future", "standard-library" ]
 
 [tool.codespell]
-skip = [ "build/*", "*.json", "*.csv", "**/node_modules/*", "./s2-js/dist/*" ]
-#ignore-words-list = []
+skip = [ "build/*" ]
 
 [tool.pytest.ini_options]
 pythonpath = [ ".", "src" ]
@@ -125,5 +126,4 @@ match = "main"
 [tool.semantic_release.commit_parser_options]
 major_tags = [ ":boom:" ]
 minor_tags = [ ":rocket:" ]
-# patch_tags = [ ":ambulance:", ":lock:", ":bug:", ":dolphin:" ]
-patch_tags = [ "" ] # always patch
+patch_tags = [ "" ]         # always patch
