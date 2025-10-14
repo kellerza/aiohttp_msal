@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.0.8 (2025-10-14)
+
+### 
+
+- Py314
+  ([`5a2bdab`](https://github.com/kellerza/aiohttp_msal/commit/5a2bdabdb80707faf31b23dd6a332ee8ed059e04))
+
+
 ## v1.0.7 (2025-09-09)
 
 ### 
