@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.0.10 (2025-11-26)
+
+### 
+
+- Py.typed
+  ([`8d881e9`](https://github.com/kellerza/aiohttp_msal/commit/8d881e9240a65355bc1cf103d0c3ccc56e24dad7))
+
+
 ## v1.0.9 (2025-10-14)
 
 ### 
