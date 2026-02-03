@@ -2,6 +2,34 @@
 
 <!-- version list -->
 
+## v1.0.11 (2026-02-03)
+
+### 
+
+-
+  ([`b318744`](https://github.com/kellerza/aiohttp_msal/commit/b31874432868fa1c6a3c87b3682e26b1c29f563e))
+
+- ---
+  ([`b318744`](https://github.com/kellerza/aiohttp_msal/commit/b31874432868fa1c6a3c87b3682e26b1c29f563e))
+
+- 314
+  ([`50a6ebc`](https://github.com/kellerza/aiohttp_msal/commit/50a6ebc1541eafb4a147f69bfa79feb95a551dcf))
+
+- Bump the actions-deps group across 1 directory with 2 updates
+  ([`b318744`](https://github.com/kellerza/aiohttp_msal/commit/b31874432868fa1c6a3c87b3682e26b1c29f563e))
+
+- Bumps the actions-deps group with 2 updates in the / directory:
+  [actions/checkout](https://github.com/actions/checkout) and
+  [python-semantic-release/python-semantic-release](https://github.com/python-semantic-release/python-semantic-release).
+  ([`b318744`](https://github.com/kellerza/aiohttp_msal/commit/b31874432868fa1c6a3c87b3682e26b1c29f563e))
+
+- Signed-off-by: dependabot[bot] <support@github.com>
+  ([`b318744`](https://github.com/kellerza/aiohttp_msal/commit/b31874432868fa1c6a3c87b3682e26b1c29f563e))
+
+- Updates `python-semantic-release/python-semantic-release` from 10.4.1 to 10.5.2
+  ([`b318744`](https://github.com/kellerza/aiohttp_msal/commit/b31874432868fa1c6a3c87b3682e26b1c29f563e))
+
+
 ## v1.0.10 (2025-11-26)
 
 ### 
