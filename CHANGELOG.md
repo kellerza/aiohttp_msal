@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.1.1 (2026-02-17)
+
+### 
+
+- Export, getenv
+  ([`c0b7ba3`](https://github.com/kellerza/aiohttp_msal/commit/c0b7ba31628fc469f02c912a1c2ea46fadeb5155))
+
+
 ## v1.1.0 (2026-02-17)
 
 ### :rocket:
