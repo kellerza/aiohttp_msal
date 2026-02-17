@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.1.0 (2026-02-17)
+
+### :rocket:
+
+- :rocket: Migrate to dataclasses
+  ([`e721abe`](https://github.com/kellerza/aiohttp_msal/commit/e721abe28a9b3cd5b34d728cda567e73358c298e))
+
+
 ## v1.0.11 (2026-02-03)
 
 ### 
