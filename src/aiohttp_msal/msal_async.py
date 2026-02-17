@@ -8,10 +8,10 @@ Once you have the OAuth tokens store in the session, you are free to make reques
 import asyncio
 import logging
 from collections.abc import Callable
+from dataclasses import dataclass
 from functools import cached_property, partialmethod
 from typing import Any, ClassVar, Literal, Self, Unpack, cast
 
-import attrs
 from aiohttp import web
 from aiohttp.client import (
     ClientResponse,
@@ -38,7 +38,7 @@ HTTP_DELETE = "delete"
 HTTP_ALLOWED = [HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_PATCH, HTTP_DELETE]
 
 
-@attrs.define(slots=False)
+@dataclass
 class AsyncMSAL:
     """AsyncMSAL class.
 
@@ -168,9 +168,7 @@ class AsyncMSAL:
 
     async def async_acquire_token_by_auth_code_flow(self, auth_response: Any) -> None:
         """Second step - Acquire token, async version."""
-        await asyncio.get_event_loop().run_in_executor(
-            None, self.acquire_token_by_auth_code_flow, auth_response
-        )
+        await asyncio.to_thread(self.acquire_token_by_auth_code_flow, auth_response)
 
     def get_token(self, scopes: list[str] | None = None) -> dict[str, Any] | None:
         """Acquire a token based on username."""
@@ -185,7 +183,7 @@ class AsyncMSAL:
 
     async def async_get_token(self) -> dict[str, Any] | None:
         """Acquire a token based on username."""
-        return await asyncio.get_event_loop().run_in_executor(None, self.get_token)
+        return await asyncio.to_thread(self.get_token)
 
     async def request(
         self, method: HttpMethods, url: StrOrURL, **kwargs: Unpack[_RequestOptions]
@@ -204,7 +202,9 @@ class AsyncMSAL:
 
         kwargs = kwargs.copy()
         # Ensure headers exist & make a copy
-        headers = dict[str, str](kwargs.get("headers") or {})  # type:ignore[arg-type]
+        headers = dict[str, str]()
+        if hdrs := kwargs.get("headers"):
+            headers.update(hdrs)  # type: ignore[arg-type, call-overload]
         kwargs["headers"] = headers
 
         headers["Authorization"] = "Bearer " + token["access_token"]

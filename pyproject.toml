@@ -22,11 +22,9 @@ classifiers = [
 ]
 dependencies = [
   "aiohttp>=3.11.18",
-  "aiohttp-session[aioredis]>=2.12.1",
-  "attrs>=25.3",
+  "aiohttp-session[aioredis]>=2.12.1,<3",
   "msal>=1.32.3",
 ]
-optional-dependencies.aioredis = [ "aiohttp-session[aioredis]>=2.12.1,<3" ]
 urls.Homepage = "https://github.com/kellerza/aiohttp_msal"
 
 [dependency-groups]
@@ -38,8 +36,8 @@ dev = [
   "pytest-aiohttp",
   "pytest-asyncio",
   "pytest-cov",
-  "pytest-env",
   "types-redis",
+  "zuban>=0.5.1",
 ]
 
 [tool.ruff]
@@ -77,34 +75,15 @@ lint.isort.no-lines-before = [ "future", "standard-library" ]
 [tool.codespell]
 skip = [ "build/*" ]
 
-[tool.pytest.ini_options]
-pythonpath = [ ".", "src" ]
-filterwarnings = "ignore:.+@coroutine.+deprecated.+"
-norecursedirs = [ ".git", "modules" ]
-log_cli = true
-log_cli_level = "DEBUG"
-asyncio_mode = "auto"
-addopts = "--cov=aiohttp_msal --cov-report xml:cov.xml"
-asyncio_default_fixture_loop_scope = "function"
-
-env = [
-  "X_SP_APP_PW=p1",
-  "X_SP_APP_ID=i1",
-  "X_SP_AUTHORITY=a1",
-  "X_DOMAIN=x.com",
-
-  "Y_SP_APP_PW=p2",
-  "Y_SP_APP_ID=i2",
-  "Y_SP_AUTHORITY=a2",
-  "Y_DOMAIN=y.com",
-
-  "A_NUM=5",
-  "A_BOOL=True",
-
-  "B_NUM=10",
-  "B_BOOL=False",
-  "B_ROOT=/c/",
-]
+[tool.pytest]
+ini_options.pythonpath = [ ".", "src" ]
+ini_options.filterwarnings = "ignore:.+@coroutine.+deprecated.+"
+ini_options.norecursedirs = [ ".git", "modules" ]
+ini_options.log_cli = true
+ini_options.log_cli_level = "DEBUG"
+ini_options.asyncio_mode = "auto"
+ini_options.addopts = "--cov=aiohttp_msal --cov-report xml:cov.xml"
+ini_options.asyncio_default_fixture_loop_scope = "function"
 
 [tool.mypy]
 disallow_untyped_defs = true
@@ -118,12 +97,8 @@ commit_parser = "emoji"
 version_toml = [ "pyproject.toml:project.version" ]
 build_command = "pip install uv && uv build"
 commit_version_number = true
-
 # https://python-semantic-release.readthedocs.io/en/latest/multibranch_releases.html#configuring-multibranch-releases
-[tool.semantic_release.branches.main]
-match = "main"
-
-[tool.semantic_release.commit_parser_options]
-major_tags = [ ":boom:" ]
-minor_tags = [ ":rocket:" ]
-patch_tags = [ "" ]         # always patch
+branches.main.match = "main"
+commit_parser_options.major_tags = [ ":boom:" ]
+commit_parser_options.minor_tags = [ ":rocket:" ]
+commit_parser_options.patch_tags = [ "" ]  # always patch

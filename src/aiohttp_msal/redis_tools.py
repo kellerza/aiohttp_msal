@@ -31,7 +31,7 @@ async def get_redis() -> AsyncGenerator[Redis, None]:
         yield redis
     finally:
         ENV.database = None  # type:ignore[assignment]
-        await redis.close()
+        await redis.aclose()  # type:ignore[attr-defined]
 
 
 async def session_iter(

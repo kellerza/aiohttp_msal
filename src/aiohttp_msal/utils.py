@@ -1,27 +1,22 @@
 """Graph User Info."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
-from functools import partial, wraps
+from collections.abc import Callable, Coroutine
+from functools import wraps
 from typing import Any
 
 
-def async_wrap[T](
-    func: Callable[..., T],
-) -> Callable[..., Awaitable[T]]:
+def async_wrap[T, **P](
+    func: Callable[P, T],
+) -> Callable[P, Coroutine[None, None, T]]:
     """Wrap a function doing I/O to run in an executor thread."""
 
     @wraps(func)
     async def run(
-        loop: asyncio.AbstractEventLoop | None = None,
-        executor: Any = None,
         *args: Any,
         **kwargs: Any,
     ) -> T:
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        pfunc = partial(func, *args, **kwargs)
-        return await loop.run_in_executor(executor, pfunc)
+        return await asyncio.to_thread(func, *args, **kwargs)
 
     return run
 
@@ -46,7 +41,9 @@ class dict_property(property):
             getattr(instance, self.dict_name, {}).__setitem__(self.prop_name, value)
 
 
-def retry[T, **P](func: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
+def retry[T, **P](
+    func: Callable[P, Coroutine[None, None, T]],
+) -> Callable[P, Coroutine[None, None, T]]:
     """Retry if tenacity is installed."""
 
     @wraps(func)

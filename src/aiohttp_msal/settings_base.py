@@ -2,10 +2,9 @@
 
 import logging
 import os
+from dataclasses import Field, dataclass, fields
 from pathlib import Path
-from typing import Any
-
-import attrs
+from typing import Any, Literal
 
 KEY_REQ = "required"
 KEY_HIDE = "hide"
@@ -14,7 +13,7 @@ VAR_REQ = {KEY_REQ: True}
 VAR_HIDE = {KEY_HIDE: True}
 
 
-@attrs.define
+@dataclass
 class SettingsBase:
     """Retrieve Settings from environment variables.
 
@@ -25,27 +24,29 @@ class SettingsBase:
     convert environment variables to match the type of the value here.
     """
 
-    _env_prefix: str = attrs.field(init=False, default="")
+    env_prefix: str = ""
 
-    def _get_fields(self) -> dict[str, attrs.Attribute]:
-        """Get env."""
-        res: list[attrs.Attribute] = [
-            a for a in attrs.fields(self.__class__) if a.name.isupper()
-        ]
+    def __post_init__(self) -> None:
+        """Post init."""
+        fnames = {a.name for a in fields(self) if a.name.isupper()}
+        if e := fnames - {a for a in dir(self) if a.isupper()}:
+            raise AssertionError(f"Ensure all UPPERCASE fields has a type!: {e}")
+        for fname in fnames:
+            if fname.endswith("_URI") and (val := getattr(self, fname)):
+                setattr(self, fname, val if val.endswith("/") else f"{val}/")
 
-        dirs = [f for f in dir(self) if f.isupper()]
-        if len(dirs) != len(res):
-            for atr in res:
-                dirs.remove(atr.name)
-            raise AssertionError(f"There are UPPERCASE fields without a type!: {dirs}")
+    @property
+    def fields(self) -> dict[str, Field]:
+        """Get fields with environment variable names as keys."""
+        prefix = self.env_prefix.upper()
+        return {f"{prefix}{a.name}": a for a in fields(self) if a.name.isupper()}
 
-        return {f"{self._env_prefix}{a.name}": a for a in res}
-
-    def load(self, environment_prefix: str = "") -> None:
+    def load(self, env_prefix: str | None = None) -> None:
         """Initialize."""
         logger = logging.getLogger(__name__)
-        self._env_prefix = environment_prefix.upper()
-        for ename, atr in self._get_fields().items():
+        if env_prefix is not None:
+            self.env_prefix = env_prefix.upper()
+        for ename, atr in self.fields.items():
             newv = os.getenv(ename)
             if newv is None:
                 if atr.metadata.get(KEY_REQ):
@@ -55,7 +56,7 @@ class SettingsBase:
                 newv = newv.strip('"')
 
             curv = getattr(self, atr.name)
-            v_type = atr.type or type(curv)
+            v_type: Any = atr.type or type(curv)
 
             if issubclass(v_type, bool):
                 setattr(self, atr.name, newv.upper() in ("1", "TRUE"))
@@ -72,17 +73,21 @@ class SettingsBase:
 
             logger.debug(
                 "ENV %s%s = %s",
-                self._env_prefix,
+                self.env_prefix,
                 atr.name,
                 "***" if atr.metadata.get(KEY_HIDE) else getattr(self, atr.name),
             )
 
-    def asdict(self, as_string: bool = False) -> dict[str, Any]:
+    def asdict(
+        self, as_string: bool = False, hide: Literal["***"] | None = None
+    ) -> dict[str, Any]:
         """Get all variables."""
         res = {}
-        for ename, atr in self._get_fields().items():
+        for ename, atr in self.fields.items():
             curv = getattr(self, atr.name)
             if atr.metadata.get(KEY_HIDE):
-                continue
+                if hide is None:
+                    continue
+                curv = "***"
             res[ename] = str(curv) if as_string else curv
         return res
