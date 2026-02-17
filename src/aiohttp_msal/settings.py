@@ -5,12 +5,12 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from aiohttp_msal.settings_base import VAR_REQ, VAR_REQ_HIDE, SettingsBase
+from aiohttp_msal.settings_base import VAR_HIDE, VAR_REQ, VAR_REQ_HIDE, SettingsBase
 
 if TYPE_CHECKING:
     from redis.asyncio import Redis
 
-__all__ = ["ENV", "MSALSettings", "SettingsBase"]
+__all__ = ["ENV", "VAR_HIDE", "VAR_REQ", "VAR_REQ_HIDE", "MSALSettings", "SettingsBase"]
 
 
 @dataclass

@@ -91,3 +91,9 @@ class SettingsBase:
                 curv = "***"
             res[ename] = str(curv) if as_string else curv
         return res
+
+    def __getitem__(self, name: str) -> str:
+        """Get some unknown value from the environment."""
+        if name != name.upper():
+            raise NameError(f"Only uppercase environment variables supported: {name}")
+        return os.getenv(self.env_prefix + name, "")
