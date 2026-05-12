@@ -2,6 +2,53 @@
 
 <!-- version list -->
 
+## v1.1.2 (2026-05-12)
+
+### 
+
+-
+  ([`86aaae9`](https://github.com/kellerza/aiohttp_msal/commit/86aaae9a3333162f6f96c599352dc51dd108ae39))
+
+- ---
+  ([`86aaae9`](https://github.com/kellerza/aiohttp_msal/commit/86aaae9a3333162f6f96c599352dc51dd108ae39))
+
+- ---
+  ([`ec48198`](https://github.com/kellerza/aiohttp_msal/commit/ec48198391799d7e546f33ba0646be3a247cc786))
+
+- ---
+  ([`4bb95ad`](https://github.com/kellerza/aiohttp_msal/commit/4bb95ad94f5a0651c6a21b3902f63bca9861f2a2))
+
+- Bump aiohttp from 3.13.3 to 3.13.5
+  ([`4bb95ad`](https://github.com/kellerza/aiohttp_msal/commit/4bb95ad94f5a0651c6a21b3902f63bca9861f2a2))
+
+- Bump msal from 1.34.0 to 1.36.0
+  ([`ec48198`](https://github.com/kellerza/aiohttp_msal/commit/ec48198391799d7e546f33ba0646be3a247cc786))
+
+- Bump the actions-deps group across 1 directory with 2 updates
+  ([`86aaae9`](https://github.com/kellerza/aiohttp_msal/commit/86aaae9a3333162f6f96c599352dc51dd108ae39))
+
+- Bumps [msal](https://github.com/AzureAD/microsoft-authentication-library-for-python) from 1.34.0
+  to 1.36.0.
+  ([`ec48198`](https://github.com/kellerza/aiohttp_msal/commit/ec48198391799d7e546f33ba0646be3a247cc786))
+
+- Bumps the actions-deps group with 2 updates in the / directory:
+  [codecov/codecov-action](https://github.com/codecov/codecov-action) and
+  [python-semantic-release/python-semantic-release](https://github.com/python-semantic-release/python-semantic-release).
+  ([`86aaae9`](https://github.com/kellerza/aiohttp_msal/commit/86aaae9a3333162f6f96c599352dc51dd108ae39))
+
+- Signed-off-by: dependabot[bot] <support@github.com>
+  ([`86aaae9`](https://github.com/kellerza/aiohttp_msal/commit/86aaae9a3333162f6f96c599352dc51dd108ae39))
+
+- Signed-off-by: dependabot[bot] <support@github.com>
+  ([`ec48198`](https://github.com/kellerza/aiohttp_msal/commit/ec48198391799d7e546f33ba0646be3a247cc786))
+
+- Signed-off-by: dependabot[bot] <support@github.com>
+  ([`4bb95ad`](https://github.com/kellerza/aiohttp_msal/commit/4bb95ad94f5a0651c6a21b3902f63bca9861f2a2))
+
+- Updates `python-semantic-release/python-semantic-release` from 10.5.2 to 10.5.3
+  ([`86aaae9`](https://github.com/kellerza/aiohttp_msal/commit/86aaae9a3333162f6f96c599352dc51dd108ae39))
+
+
 ## v1.1.1 (2026-02-17)
 
 ### 
