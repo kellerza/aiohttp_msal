@@ -2,6 +2,49 @@
 
 <!-- version list -->
 
+## v1.1.3 (2026-06-08)
+
+### 
+
+-
+  ([`80e1165`](https://github.com/kellerza/aiohttp_msal/commit/80e1165de3efc75becb077efe215dc9bd9396c61))
+
+- ---
+  ([`f66f208`](https://github.com/kellerza/aiohttp_msal/commit/f66f208180e4599f86b6fc1b7ac237c9a18dc699))
+
+- ---
+  ([`fc543f8`](https://github.com/kellerza/aiohttp_msal/commit/fc543f881de851477c9045a7751a2dc3dd6bafdf))
+
+- ---
+  ([`80e1165`](https://github.com/kellerza/aiohttp_msal/commit/80e1165de3efc75becb077efe215dc9bd9396c61))
+
+- Bump aiohttp from 3.13.5 to 3.14.1
+  ([`fc543f8`](https://github.com/kellerza/aiohttp_msal/commit/fc543f881de851477c9045a7751a2dc3dd6bafdf))
+
+- Bump codecov/codecov-action from 6 to 7 in the actions-deps group
+  ([`80e1165`](https://github.com/kellerza/aiohttp_msal/commit/80e1165de3efc75becb077efe215dc9bd9396c61))
+
+- Bump msal from 1.36.0 to 1.37.0
+  ([`f66f208`](https://github.com/kellerza/aiohttp_msal/commit/f66f208180e4599f86b6fc1b7ac237c9a18dc699))
+
+- Bumps [msal](https://github.com/AzureAD/microsoft-authentication-library-for-python) from 1.36.0
+  to 1.37.0.
+  ([`f66f208`](https://github.com/kellerza/aiohttp_msal/commit/f66f208180e4599f86b6fc1b7ac237c9a18dc699))
+
+- Bumps the actions-deps group with 1 update:
+  [codecov/codecov-action](https://github.com/codecov/codecov-action).
+  ([`80e1165`](https://github.com/kellerza/aiohttp_msal/commit/80e1165de3efc75becb077efe215dc9bd9396c61))
+
+- Signed-off-by: dependabot[bot] <support@github.com>
+  ([`f66f208`](https://github.com/kellerza/aiohttp_msal/commit/f66f208180e4599f86b6fc1b7ac237c9a18dc699))
+
+- Signed-off-by: dependabot[bot] <support@github.com>
+  ([`fc543f8`](https://github.com/kellerza/aiohttp_msal/commit/fc543f881de851477c9045a7751a2dc3dd6bafdf))
+
+- Signed-off-by: dependabot[bot] <support@github.com>
+  ([`80e1165`](https://github.com/kellerza/aiohttp_msal/commit/80e1165de3efc75becb077efe215dc9bd9396c61))
+
+
 ## v1.1.2 (2026-05-12)
 
 ### 
