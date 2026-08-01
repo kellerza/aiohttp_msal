@@ -2,6 +2,56 @@
 
 <!-- version list -->
 
+## v1.1.4 (2026-08-01)
+
+### 
+
+-
+  ([`089945e`](https://github.com/kellerza/aiohttp_msal/commit/089945ea148a1c30787d7a76fe4929454a50cab2))
+
+- ---
+  ([`49753bf`](https://github.com/kellerza/aiohttp_msal/commit/49753bf078d599d2a920bab0fc61f4ef3fd99e44))
+
+- ---
+  ([`089945e`](https://github.com/kellerza/aiohttp_msal/commit/089945ea148a1c30787d7a76fe4929454a50cab2))
+
+- ---
+  ([`7414555`](https://github.com/kellerza/aiohttp_msal/commit/741455571d39d72966d839d25eb7b5011a87074c))
+
+- Bump aiohttp from 3.14.1 to 3.14.3
+  ([`7414555`](https://github.com/kellerza/aiohttp_msal/commit/741455571d39d72966d839d25eb7b5011a87074c))
+
+- Bump pyproject-fmt from 2.16.0 to 2.23.0
+  ([`49753bf`](https://github.com/kellerza/aiohttp_msal/commit/49753bf078d599d2a920bab0fc61f4ef3fd99e44))
+
+- Bump the actions-deps group across 1 directory with 3 updates
+  ([`089945e`](https://github.com/kellerza/aiohttp_msal/commit/089945ea148a1c30787d7a76fe4929454a50cab2))
+
+- Bumps [pyproject-fmt](https://github.com/tox-dev/toml-fmt) from 2.16.0 to 2.23.0.
+  ([`49753bf`](https://github.com/kellerza/aiohttp_msal/commit/49753bf078d599d2a920bab0fc61f4ef3fd99e44))
+
+- Bumps the actions-deps group with 3 updates in the / directory:
+  [actions/checkout](https://github.com/actions/checkout),
+  [actions/setup-python](https://github.com/actions/setup-python) and
+  [python-semantic-release/python-semantic-release](https://github.com/python-semantic-release/python-semantic-release).
+  ([`089945e`](https://github.com/kellerza/aiohttp_msal/commit/089945ea148a1c30787d7a76fe4929454a50cab2))
+
+- Signed-off-by: dependabot[bot] <support@github.com>
+  ([`49753bf`](https://github.com/kellerza/aiohttp_msal/commit/49753bf078d599d2a920bab0fc61f4ef3fd99e44))
+
+- Signed-off-by: dependabot[bot] <support@github.com>
+  ([`089945e`](https://github.com/kellerza/aiohttp_msal/commit/089945ea148a1c30787d7a76fe4929454a50cab2))
+
+- Signed-off-by: dependabot[bot] <support@github.com>
+  ([`7414555`](https://github.com/kellerza/aiohttp_msal/commit/741455571d39d72966d839d25eb7b5011a87074c))
+
+- Updates `actions/setup-python` from 6 to 7
+  ([`089945e`](https://github.com/kellerza/aiohttp_msal/commit/089945ea148a1c30787d7a76fe4929454a50cab2))
+
+- Updates `python-semantic-release/python-semantic-release` from 10.5.3 to 10.6.1
+  ([`089945e`](https://github.com/kellerza/aiohttp_msal/commit/089945ea148a1c30787d7a76fe4929454a50cab2))
+
+
 ## v1.1.3 (2026-06-08)
 
 ### 
