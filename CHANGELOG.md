@@ -2,6 +2,40 @@
 
 <!-- version list -->
 
+## v1.1.5 (2026-09-18)
+
+### 
+
+-
+  ([`8f3c129`](https://github.com/kellerza/aiohttp_msal/commit/8f3c1292234d1176848d13673c9bcb650ea84f62))
+
+- ---
+  ([`8f3c129`](https://github.com/kellerza/aiohttp_msal/commit/8f3c1292234d1176848d13673c9bcb650ea84f62))
+
+- ---
+  ([`49b65d3`](https://github.com/kellerza/aiohttp_msal/commit/49b65d37c5e6b459cbabd346cc08cac22a01ad0c))
+
+- Bump msal from 1.37.0 to 1.38.0
+  ([`49b65d3`](https://github.com/kellerza/aiohttp_msal/commit/49b65d37c5e6b459cbabd346cc08cac22a01ad0c))
+
+- Bump python-semantic-release/python-semantic-release
+  ([`8f3c129`](https://github.com/kellerza/aiohttp_msal/commit/8f3c1292234d1176848d13673c9bcb650ea84f62))
+
+- Bumps [msal](https://github.com/AzureAD/microsoft-authentication-library-for-python) from 1.37.0
+  to 1.38.0.
+  ([`49b65d3`](https://github.com/kellerza/aiohttp_msal/commit/49b65d37c5e6b459cbabd346cc08cac22a01ad0c))
+
+- Bumps the actions-deps group with 1 update:
+  [python-semantic-release/python-semantic-release](https://github.com/python-semantic-release/python-semantic-release).
+  ([`8f3c129`](https://github.com/kellerza/aiohttp_msal/commit/8f3c1292234d1176848d13673c9bcb650ea84f62))
+
+- Signed-off-by: dependabot[bot] <support@github.com>
+  ([`8f3c129`](https://github.com/kellerza/aiohttp_msal/commit/8f3c1292234d1176848d13673c9bcb650ea84f62))
+
+- Signed-off-by: dependabot[bot] <support@github.com>
+  ([`49b65d3`](https://github.com/kellerza/aiohttp_msal/commit/49b65d37c5e6b459cbabd346cc08cac22a01ad0c))
+
+
 ## v1.1.4 (2026-08-01)
 
 ### 
